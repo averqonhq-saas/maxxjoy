@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
-export const WishlistPage = ({ onBack, onBookNow }) => {
-  const { wishlist, toggleWishlist, formatPrice, setSelectedDestinationModal, showToast, packagesList } = useApp();
+export const WishlistPage = ({ onBack, onBookNow, onDetail }) => {
+  const { wishlist, toggleWishlist, formatPrice, showToast, packagesList, destinationsList } = useApp();
   const [activeFilter, setActiveFilter] = useState('All');
   const [compareItems, setCompareItems] = useState([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
 
-  // Get full package objects for items in wishlist from dynamic packagesList
-  const savedPackages = (packagesList || []).filter(pkg => wishlist.includes(pkg.id));
+  // Resolve both package IDs and destination IDs saved from the home cards.
+  const savedPackages = [
+    ...(packagesList || []).filter(pkg => wishlist.includes(pkg.id)),
+    ...(destinationsList || [])
+      .filter(dest => wishlist.includes(dest.id))
+      .map(dest => ({
+        ...dest,
+        duration: dest.duration || '5 Days / 4 Nights',
+        destinationName: dest.title,
+        inclusions: dest.highlights || [],
+        originalPrice: dest.originalPrice || null,
+        reviewsCount: dest.reviewsCount || 0,
+      }))
+  ];
 
   // Category Filter logic
   const categories = ['All', 'Domestic', 'International', 'Honeymoon', 'Adventure'];
@@ -222,7 +234,7 @@ export const WishlistPage = ({ onBack, onBookNow }) => {
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setSelectedDestinationModal(pkg)}
+                        onClick={() => onDetail?.(pkg)}
                         className="p-2.5 rounded-xl border border-[#E2E8F0] text-[#1A1A1A] hover:bg-[#F5F9FC] text-xs font-bold transition-all"
                         title="View Details"
                       >

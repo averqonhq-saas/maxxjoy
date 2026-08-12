@@ -200,6 +200,7 @@ export default function App() {
               <WishlistPage
                 onBack={() => goTo('home')}
                 onBookNow={() => goTo('booking')}
+                onDetail={(pkg) => openPackageDetail(pkg)}
               />
             )}
 
