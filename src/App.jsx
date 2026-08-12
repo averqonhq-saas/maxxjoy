@@ -228,7 +228,7 @@ export default function App() {
             {page === 'cookie' && <CookiePolicyPage />}
           </main>
 
-          <Footer {...footerProps} />
+          {page !== 'booking' && <Footer {...footerProps} />}
         </div>
       )}
     </AppProvider>

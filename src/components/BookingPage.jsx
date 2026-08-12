@@ -106,7 +106,7 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
   const [onlineTxnRef, setOnlineTxnRef] = useState('');
 
   const activeTour = selectedPackageForBooking || {
-    title: 'Dubai Luxury Getaway',
+    title: 'Dubai Premium Luxury Escape',
     location: 'Dubai, UAE',
     price: 1499,
     image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1400&q=85',
@@ -846,7 +846,7 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
               <span className="material-symbols-outlined text-[#0A4D8C]" style={{ fontSize: 20 }}>travel</span>
             </div>
             <div>
-              <p className="text-base font-black text-[#1A1A1A] leading-tight">{activeTour.title}</p>
+              <p className="max-w-[190px] truncate text-sm font-black leading-tight text-[#1A1A1A] sm:max-w-none sm:text-base">{activeTour.title}</p>
               <p className="text-[10px] text-[#64748B] font-medium">Verified Tour Booking Portal</p>
             </div>
           </div>
