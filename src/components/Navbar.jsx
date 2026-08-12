@@ -23,27 +23,27 @@ export const Navbar = ({ onBookNow, onLogin, onWishlist, onBookings, onAdmin, on
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
-      <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:h-20" aria-label="Main navigation">
-        <button onClick={onHome} className="group flex items-center gap-2.5 text-left" aria-label="Maxx Joy Tours and Travel home">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 shadow-[0_8px_30px_rgba(15,23,42,.06)] backdrop-blur-xl before:block before:h-1 before:bg-gradient-to-r before:from-[#0A4D8C] before:via-[#3FA9F5] before:to-[#FF7A00]">
+      <nav className="mx-auto flex h-[70px] max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:h-[76px]" aria-label="Main navigation">
+        <button onClick={onHome} className="group flex items-center gap-3 text-left" aria-label="Maxx Joy Tours and Travel home">
           <img
             src="/maxxjoy-logo1.png"
             alt="Maxx Joy Tours and Travel"
-            className="h-10 w-10 sm:h-12 sm:w-12 object-contain transition-transform group-hover:scale-105 flex-shrink-0"
+            className="h-11 w-11 rounded-xl border border-slate-100 bg-white object-contain p-0.5 shadow-sm transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
           />
-          <div className="flex flex-col leading-tight">
-            <span className="font-header text-base sm:text-lg font-black tracking-tight text-[#0A4D8C]">
+          <div className="flex flex-col border-l border-slate-200 pl-3 leading-tight">
+            <span className="font-header text-base font-black tracking-tight text-[#0A4D8C] sm:text-lg">
               Maxx <span className="text-amber-500">Joy</span>
             </span>
-            <span className="text-[9px] sm:text-[10px] font-semibold text-slate-500 uppercase tracking-wider leading-tight">
+            <span className="text-[8px] font-bold uppercase tracking-[.13em] text-slate-500 sm:text-[9px]">
               Tours and Travel Pvt Ltd
             </span>
           </div>
         </button>
 
-        <div className="hidden items-center gap-5 xl:flex">
+        <div className="hidden items-center rounded-2xl border border-slate-100 bg-slate-50/80 p-1 xl:flex">
           {links.map(([label, callback]) => (
-            <button key={label} onClick={callback} className="text-sm font-bold text-slate-700 transition-colors hover:text-[#0A4D8C]">
+            <button key={label} onClick={callback} className="rounded-xl px-3 py-2 text-[13px] font-bold text-slate-600 transition hover:bg-white hover:text-[#0A4D8C] hover:shadow-sm">
               {label}
             </button>
           ))}
@@ -51,7 +51,7 @@ export const Navbar = ({ onBookNow, onLogin, onWishlist, onBookings, onAdmin, on
 
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="relative hidden sm:block">
-            <button onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)} className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100" aria-expanded={currencyDropdownOpen}>
+            <button onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)} className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 hover:border-[#0A4D8C]/30 hover:bg-slate-50" aria-expanded={currencyDropdownOpen}>
               <span>{currencies[currency]?.symbol}</span><span>{currency}</span><span className="material-symbols-outlined text-base text-slate-400">expand_more</span>
             </button>
             {currencyDropdownOpen && (
@@ -66,14 +66,14 @@ export const Navbar = ({ onBookNow, onLogin, onWishlist, onBookings, onAdmin, on
             )}
           </div>
 
-          <button onClick={onWishlist} className="relative hidden h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 sm:flex" aria-label="View saved trips">
+          <button onClick={onWishlist} className="relative hidden h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition hover:border-rose-200 hover:bg-rose-50 sm:flex" aria-label="View saved trips">
             <span className="material-symbols-outlined text-lg text-rose-500">favorite</span>
             {wishlist.length > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">{wishlist.length}</span>}
           </button>
 
           {user ? (
             <div className="relative hidden sm:block">
-              <button onClick={() => setUserDropdownOpen(!userDropdownOpen)} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1 hover:bg-slate-100" aria-expanded={userDropdownOpen}>
+              <button onClick={() => setUserDropdownOpen(!userDropdownOpen)} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 transition hover:border-[#0A4D8C]/30 hover:bg-slate-50" aria-expanded={userDropdownOpen}>
                 <img src={user.avatar} alt="" className="h-7 w-7 rounded-lg object-cover" />
                 <span className="hidden pr-1 text-xs font-bold text-slate-700 md:inline">{user.name.split(' ')[0]}</span>
               </button>
@@ -86,12 +86,12 @@ export const Navbar = ({ onBookNow, onLogin, onWishlist, onBookings, onAdmin, on
                 </div>
               )}
             </div>
-          ) : <button onClick={onLogin} className="hidden text-xs font-bold text-slate-700 hover:text-[#0A4D8C] sm:block">Log in</button>}
+          ) : <button onClick={onLogin} className="hidden rounded-xl px-2 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 hover:text-[#0A4D8C] sm:block">Log in</button>}
 
-          <button onClick={onBookNow} className="hidden items-center gap-1.5 rounded-xl bg-[#FF7A00] px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-[#FF7A00]/25 transition hover:bg-[#ff881a] sm:flex">
+          <button onClick={onBookNow} className="hidden items-center gap-1.5 rounded-xl bg-[#FF7A00] px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-[#FF7A00]/25 transition hover:-translate-y-0.5 hover:bg-[#e56e00] sm:flex">
             <span className="material-symbols-outlined text-base">flight_takeoff</span>Book now
           </button>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 xl:hidden" aria-label="Toggle navigation menu" aria-expanded={mobileMenuOpen}>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 xl:hidden" aria-label="Toggle navigation menu" aria-expanded={mobileMenuOpen}>
             <span className="material-symbols-outlined">{mobileMenuOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
