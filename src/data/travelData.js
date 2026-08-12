@@ -1,8 +1,8 @@
 export const currencies = {
+  INR: { symbol: '₹', rate: 83.5, code: 'INR', name: 'Indian Rupee' },
   USD: { symbol: '$', rate: 1, code: 'USD', name: 'US Dollar' },
   EUR: { symbol: '€', rate: 0.92, code: 'EUR', name: 'Euro' },
   GBP: { symbol: '£', rate: 0.78, code: 'GBP', name: 'British Pound' },
-  INR: { symbol: '₹', rate: 83.5, code: 'INR', name: 'Indian Rupee' },
   AED: { symbol: 'AED ', rate: 3.67, code: 'AED', name: 'UAE Dirham' }
 };
 

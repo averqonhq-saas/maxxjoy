@@ -133,7 +133,7 @@ export const AppProvider = ({ children }) => {
   const toggleDarkMode = () => setDarkMode(prev => !prev);
 
   // ── Currency ──────────────────────────────────────────────────────────────
-  const [currency, setCurrency] = useState(() => localStorage.getItem('pt_currency') || 'USD');
+  const [currency, setCurrency] = useState(() => localStorage.getItem('pt_currency') || 'INR');
 
   const changeCurrency = (code) => {
     if (currencies[code]) {
@@ -144,8 +144,8 @@ export const AppProvider = ({ children }) => {
   };
 
   const formatPrice = (amountInUSD) => {
-    if (!amountInUSD && amountInUSD !== 0) return '$0';
-    const cur = currencies[currency] || currencies.USD;
+    if (!amountInUSD && amountInUSD !== 0) return '₹0';
+    const cur = currencies[currency] || currencies.INR;
     const converted = Math.round(amountInUSD * cur.rate);
     return `${cur.symbol}${converted.toLocaleString()}`;
   };
