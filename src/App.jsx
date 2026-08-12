@@ -7,6 +7,7 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { ReviewModal } from './components/modals/ReviewModal';
+import { DestinationModal } from './components/modals/DestinationModal';
 
 // Home Sections
 import { HeroSearch } from './components/HeroSearch';
@@ -132,6 +133,7 @@ export default function App() {
       <ToastContainer />
       <CookieConsentBanner />
       <ReviewModal />
+      <DestinationModal />
 
       {/* Standalone Admin View */}
       {page === 'admin' ? (
@@ -156,7 +158,7 @@ export default function App() {
                   onSearch={() => goTo('explore-tours')}
                 />
                 <TravelCategories onDubai={() => openPackageDetail()} />
-                <PopularDestinations onBookNow={() => openPackageDetail()} />
+                <PopularDestinations onDetail={openPackageDetail} />
                 <HandcraftedPackages onBookNow={() => openPackageDetail()} />
                 <WhyChooseUs />
                 <SpecialDeals onBookNow={() => openPackageDetail()} />

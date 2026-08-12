@@ -53,7 +53,7 @@ export const ExperienceGallery = () => {
       {/* ── Mobile: simple stack ────────────────────────────────── */}
       <div className="flex flex-col gap-4 md:hidden">
         {photos.map((photo) => (
-          <div key={photo.id} className="relative min-h-[220px]">
+          <div key={photo.id} className="relative h-[220px] first:h-[300px] sm:h-[260px] sm:first:h-[340px]">
             <GalleryCard photo={photo} onClick={() => setSelectedPhotoForLightbox(photo)} />
           </div>
         ))}

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { packagesData } from '../data/travelData';
 
-export const PopularDestinations = () => {
+export const PopularDestinations = ({ onDetail }) => {
   const {
     formatPrice,
     wishlist,
     toggleWishlist,
-    setSelectedDestinationModal,
     activeCategory,
     searchParams,
     destinationsList
@@ -15,6 +15,15 @@ export const PopularDestinations = () => {
   const [activeRegion, setActiveRegion] = useState('All');
 
   const regions = ['All', 'Asia', 'Europe', 'Middle East'];
+
+  const openPackageDetails = (destination) => {
+    const matchingPackage = packagesData.find((pkg) => pkg.destinationId === destination.id);
+    onDetail?.(matchingPackage || {
+      ...destination,
+      duration: destination.duration || '5 Days / 4 Nights',
+      inclusions: destination.highlights,
+    });
+  };
 
   const filteredDestinations = (destinationsList || []).filter(dest => {
     // Admin Active check
@@ -176,7 +185,7 @@ export const PopularDestinations = () => {
                       </div>
 
                       <button
-                        onClick={() => setSelectedDestinationModal(dest)}
+                        onClick={() => openPackageDetails(dest)}
                         className="w-full py-3 bg-slate-100 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-[#0A4D8C] hover:text-white transition-all duration-200 cursor-pointer shadow-xs"
                       >
                         View Details & Packages
