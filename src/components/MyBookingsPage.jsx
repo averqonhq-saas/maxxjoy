@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { generateAndDownloadInvoice, generateAndDownloadItinerary } from '../utils/invoiceGenerator';
+import { InvoiceModal } from './modals/InvoiceModal';
 
 export const MyBookingsPage = ({ onBack, onBookNow }) => {
-  const { myBookings, formatPrice, showToast } = useApp();
+  const { myBookings, formatPrice, legalSettings, showToast } = useApp();
   const [activeTab, setActiveTab] = useState('Upcoming'); // 'Upcoming' | 'Completed' | 'Cancelled'
   const [selectedBookingDetails, setSelectedBookingDetails] = useState(null);
+  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null);
 
   // Filter bookings based on activeTab
   const filteredBookings = myBookings.filter(b => {
@@ -14,16 +17,25 @@ export const MyBookingsPage = ({ onBack, onBookNow }) => {
     return true;
   });
 
-  const handleDownloadInvoice = (bookingId) => {
-    showToast(`Downloading Tax Invoice for ${bookingId || 'Booking'}... 📄`, 'success');
+  const handleDownloadInvoice = (target) => {
+    const booking = typeof target === 'object' && target !== null 
+      ? target 
+      : (myBookings.find(b => b.bookingId === target) || { bookingId: target });
+    
+    setSelectedInvoiceBooking(booking);
   };
 
-  const handleDownloadItinerary = (bookingId) => {
-    showToast(`Downloading Tour Itinerary PDF for ${bookingId || 'Booking'}... 🗺️`, 'success');
+  const handleDownloadItinerary = (target) => {
+    const booking = typeof target === 'object' && target !== null 
+      ? target 
+      : (myBookings.find(b => b.bookingId === target) || { bookingId: target });
+    
+    showToast(`🗺️ Travel Itinerary for ${booking.bookingId || 'Booking'} downloaded!`, 'success');
+    generateAndDownloadItinerary(booking, legalSettings);
   };
 
   const handleContactSupport = () => {
-    showToast('Connecting to 24/7 Travel Concierge Support...', 'info');
+    showToast('Connecting to 24/7 Travel Concierge Support at +91 98047 77879...', 'info');
   };
 
   // Sample timeline steps for active booking
@@ -160,8 +172,8 @@ export const MyBookingsPage = ({ onBack, onBookNow }) => {
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
-                      onClick={() => handleDownloadInvoice(b.bookingId)}
-                      className="flex-1 sm:flex-initial border border-[#E2E8F0] bg-white text-[#1A1A1A] text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-[#F5F9FC] transition-all"
+                      onClick={() => handleDownloadInvoice(b)}
+                      className="flex-1 sm:flex-initial border border-[#E2E8F0] bg-white text-[#1A1A1A] text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-[#F5F9FC] transition-all cursor-pointer"
                     >
                       Invoice
                     </button>
@@ -326,22 +338,22 @@ export const MyBookingsPage = ({ onBack, onBookNow }) => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
-                onClick={() => handleDownloadInvoice(selectedBookingDetails.bookingId)}
-                className="flex-1 bg-white border border-[#E2E8F0] text-[#1A1A1A] text-xs font-extrabold py-3 rounded-xl hover:bg-[#F5F9FC] transition-all flex items-center justify-center gap-1.5"
+                onClick={() => handleDownloadInvoice(selectedBookingDetails)}
+                className="flex-1 bg-white border border-[#E2E8F0] text-[#1A1A1A] text-xs font-extrabold py-3 rounded-xl hover:bg-[#F5F9FC] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
                 Download Invoice
               </button>
               <button
-                onClick={() => handleDownloadItinerary(selectedBookingDetails.bookingId)}
-                className="flex-1 bg-white border border-[#E2E8F0] text-[#1A1A1A] text-xs font-extrabold py-3 rounded-xl hover:bg-[#F5F9FC] transition-all flex items-center justify-center gap-1.5"
+                onClick={() => handleDownloadItinerary(selectedBookingDetails)}
+                className="flex-1 bg-white border border-[#E2E8F0] text-[#1A1A1A] text-xs font-extrabold py-3 rounded-xl hover:bg-[#F5F9FC] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <span className="material-symbols-outlined text-sm">map</span>
                 Download Itinerary
               </button>
               <button
                 onClick={handleContactSupport}
-                className="flex-1 bg-[#1A1A1A] text-white text-xs font-extrabold py-3 rounded-xl hover:bg-[#333] transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 bg-[#1A1A1A] text-white text-xs font-extrabold py-3 rounded-xl hover:bg-[#333] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <span className="material-symbols-outlined text-sm">support_agent</span>
                 Contact Support
@@ -350,6 +362,14 @@ export const MyBookingsPage = ({ onBack, onBookNow }) => {
 
           </div>
         </div>
+      )}
+
+      {/* ── Invoice Modal ──────────────────────────────────────── */}
+      {selectedInvoiceBooking && (
+        <InvoiceModal
+          booking={selectedInvoiceBooking}
+          onClose={() => setSelectedInvoiceBooking(null)}
+        />
       )}
     </div>
   );

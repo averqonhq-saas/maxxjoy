@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { generateAndDownloadInvoice, generateAndDownloadItinerary } from '../utils/invoiceGenerator';
+import { InvoiceModal } from './modals/InvoiceModal';
 
 const STEPS = [
   { key: 'details',  label: 'Details',  icon: 'person' },
@@ -19,12 +21,20 @@ const PACKAGES = [
     features: ['Ocean Terrace Access', 'Complimentary Minibar', 'Daily Housekeeping'],
   },
   {
-    id: 'royal',
-    name: 'Royal Suite',
-    desc: 'Ocean view · Butler service · All inclusive',
-    price: 2800,
-    badge: 'Most Popular',
-    features: ['Private Butler 24/7', 'Infinity Pool Access', 'Airport Limo Transfer'],
+    id: 'premium',
+    name: 'Overwater Villa',
+    desc: 'Private pool · Butler service · All-inclusive',
+    price: 1890,
+    badge: 'Popular',
+    features: ['Private Pool', '24/7 Butler Service', 'All-Inclusive Dining & Spa'],
+  },
+  {
+    id: 'penthouse',
+    name: 'Penthouse Suite',
+    desc: 'Panoramiv view · Helicopter transfer',
+    price: 3200,
+    badge: 'Luxury',
+    features: ['Private Helicopter Transfer', 'Private Chef Experience', 'VIP Airport Lounge'],
   },
 ];
 
@@ -147,12 +157,36 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
     }
   }
 
+  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null);
+
   const handleDownloadInvoice = () => {
-    showToast('📄 Generating official tax invoice PDF...', 'info');
+    const currentBookingData = {
+      bookingId: confirmedBookingId || `TRV${Math.floor(10000 + Math.random() * 90000)}`,
+      packageTitle: activeTour.title,
+      fullName: form.fullName || user?.name || 'Valued Traveler',
+      email: form.email || user?.email || 'customer@maxxjoytours.com',
+      phone: form.phone || '+91 98047 77879',
+      travelDate: form.travelDate || 'Upcoming Date',
+      travelers: form.travelers || '2 Adults',
+      duration: activeTour.duration || '5 Days / 4 Nights',
+      totalAmount: grandTotal,
+      amountPaid: paidNow,
+      balanceDue: remainingBalance,
+      currencySymbol: currency === 'INR' ? '₹' : '$'
+    };
+    setSelectedInvoiceBooking(currentBookingData);
   };
 
   const handleDownloadItinerary = () => {
-    showToast('🗺️ Downloading detailed tour itinerary PDF...', 'info');
+    const currentBookingData = {
+      bookingId: confirmedBookingId || `TRV${Math.floor(10000 + Math.random() * 90000)}`,
+      packageTitle: activeTour.title,
+      travelDate: form.travelDate || 'Upcoming Date',
+      travelers: form.travelers || '2 Adults',
+      duration: activeTour.duration || '5 Days / 4 Nights',
+    };
+    showToast('🗺️ Detailed travel itinerary downloaded!', 'success');
+    generateAndDownloadItinerary(currentBookingData, legalSettings);
   };
 
   // Razorpay Integration Helper
@@ -1054,6 +1088,13 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
           background-color: #ffffff;
         }
       `}</style>
+
+      {selectedInvoiceBooking && (
+        <InvoiceModal
+          booking={selectedInvoiceBooking}
+          onClose={() => setSelectedInvoiceBooking(null)}
+        />
+      )}
     </div>
   );
 };

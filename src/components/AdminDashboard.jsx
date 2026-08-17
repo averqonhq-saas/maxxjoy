@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { generateAndDownloadInvoice } from '../utils/invoiceGenerator';
+import { InvoiceModal } from './modals/InvoiceModal';
 import { db, auth, googleProvider } from '../firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
@@ -32,6 +34,8 @@ export const AdminDashboard = ({ onBack }) => {
     legalSettings,
     updateLegalSettings
   } = useApp();
+
+  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null);
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedAdminBooking, setSelectedAdminBooking] = useState(null);
@@ -1336,9 +1340,9 @@ export const AdminDashboard = ({ onBack }) => {
                                   Collect Balance
                                 </button>
                               )}
-                              <button
-                                onClick={() => showToast(`Downloading tax invoice for ${b.bookingId}...`, 'info')}
-                                className="px-3 py-1.5 rounded-xl border border-[#E2E8F0] bg-white text-[#1A1A1A] font-extrabold text-xs hover:bg-[#F5F9FC]"
+                               <button
+                                onClick={() => setSelectedInvoiceBooking(b)}
+                                className="px-3 py-1.5 rounded-xl border border-[#E2E8F0] bg-white text-[#1A1A1A] font-extrabold text-xs hover:bg-[#F5F9FC] cursor-pointer"
                               >
                                 Invoice 📄
                               </button>
@@ -2354,8 +2358,8 @@ export const AdminDashboard = ({ onBack }) => {
             {/* Actions */}
             <div className="flex gap-3 pt-2">
               <button
-                onClick={() => showToast(`Invoice generated for ${selectedAdminBooking.bookingId}`, 'success')}
-                className="flex-1 bg-white border border-[#E2E8F0] text-[#1A1A1A] text-xs font-bold py-3 rounded-xl hover:bg-[#F5F9FC] transition-all flex items-center justify-center gap-1.5"
+                onClick={() => setSelectedInvoiceBooking(selectedAdminBooking)}
+                className="flex-1 bg-white border border-[#E2E8F0] text-[#1A1A1A] text-xs font-bold py-3 rounded-xl hover:bg-[#F5F9FC] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
                 Download Tax Invoice
@@ -2438,6 +2442,13 @@ export const AdminDashboard = ({ onBack }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedInvoiceBooking && (
+        <InvoiceModal
+          booking={selectedInvoiceBooking}
+          onClose={() => setSelectedInvoiceBooking(null)}
+        />
       )}
     </div>
   );

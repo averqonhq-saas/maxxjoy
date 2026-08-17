@@ -568,7 +568,38 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'settings', 'legal'), (snap) => {
       if (snap.exists()) {
-        setLegalSettings(prev => ({ ...prev, ...snap.data() }));
+        const data = snap.data();
+        if (
+          !data.companyName ||
+          data.companyName.includes('Perfect Travel') ||
+          data.email?.includes('perfecttravel.com') ||
+          data.address?.includes('Adventure Way')
+        ) {
+          const cleaned = {
+            companyName: 'Maxx Joy Tours and Travel Pvt Ltd',
+            phone: '+91 9804777879 / +91 7418407088',
+            whatsapp: '+91 9804777879',
+            email: 'Info@maxxjoytours.com',
+            emails: ['Info@maxxjoytours.com', 'Yogaprathap@maxxjoytours.com', 'George@maxxjoytours.com'],
+            address: 'NO 6 new annai indra nagar maruthamalai\nCoimbatore 641046',
+            supportHours: '24 Hours / 7 Days'
+          };
+          setDoc(doc(db, 'settings', 'legal'), cleaned, { merge: true }).catch(() => {});
+          setLegalSettings(prev => ({ ...prev, ...data, ...cleaned }));
+        } else {
+          setLegalSettings(prev => ({ ...prev, ...data }));
+        }
+      } else {
+        const defaultLegal = {
+          companyName: 'Maxx Joy Tours and Travel Pvt Ltd',
+          phone: '+91 9804777879 / +91 7418407088',
+          whatsapp: '+91 9804777879',
+          email: 'Info@maxxjoytours.com',
+          emails: ['Info@maxxjoytours.com', 'Yogaprathap@maxxjoytours.com', 'George@maxxjoytours.com'],
+          address: 'NO 6 new annai indra nagar maruthamalai\nCoimbatore 641046',
+          supportHours: '24 Hours / 7 Days'
+        };
+        setDoc(doc(db, 'settings', 'legal'), defaultLegal, { merge: true }).catch(() => {});
       }
     }, () => {});
     return () => unsub();
