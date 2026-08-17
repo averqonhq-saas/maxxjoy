@@ -67,13 +67,33 @@ export const Footer = ({ onHome, onExploreTours, onAdmin, onContact, onPrivacy, 
 
         {/* Col 4 */}
         <div>
-          <h5 className="text-[#1A1A1A] font-black mb-6 uppercase tracking-widest text-xs font-header">Support & Legal</h5>
-          <ul className="space-y-3 text-xs font-medium">
-            <li><button onClick={onContact} className="hover:text-[#0A4D8C] transition-colors">24/7 Contact & Support</button></li>
-            <li><button onClick={onPrivacy} className="hover:text-[#0A4D8C] transition-colors">Privacy Policy</button></li>
-            <li><button onClick={onTerms} className="hover:text-[#0A4D8C] transition-colors">Terms & Conditions</button></li>
-            <li><button onClick={onCookiePolicy} className="hover:text-[#0A4D8C] transition-colors">Cookie Policy</button></li>
-          </ul>
+          <h5 className="text-[#1A1A1A] font-black mb-6 uppercase tracking-widest text-xs font-header">Contact & Legal</h5>
+          <div className="space-y-3 text-xs font-medium">
+            <div className="flex items-start gap-2">
+              <span className="material-symbols-outlined text-base text-[#0A4D8C] mt-0.5">location_on</span>
+              <span className="leading-snug">NO 6 new annai indra nagar maruthamalai, Coimbatore 641046</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="material-symbols-outlined text-base text-[#0A4D8C] mt-0.5">call</span>
+              <div>
+                <p><a href="tel:+919804777879" className="hover:text-[#0A4D8C] transition-colors">+91 98047 77879</a></p>
+                <p><a href="tel:+917418407088" className="hover:text-[#0A4D8C] transition-colors">+91 74184 07088</a></p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="material-symbols-outlined text-base text-[#0A4D8C] mt-0.5">mail</span>
+              <div className="space-y-0.5">
+                <p><a href="mailto:Info@maxxjoytours.com" className="hover:text-[#0A4D8C] font-semibold text-[#0A4D8C] transition-colors">Info@maxxjoytours.com</a></p>
+                <p><a href="mailto:Yogaprathap@maxxjoytours.com" className="hover:text-[#0A4D8C] transition-colors">Yogaprathap@maxxjoytours.com</a></p>
+                <p><a href="mailto:George@maxxjoytours.com" className="hover:text-[#0A4D8C] transition-colors">George@maxxjoytours.com</a></p>
+              </div>
+            </div>
+            <ul className="pt-2 border-t border-[#E2E8F0] space-y-2 text-xs">
+              <li><button onClick={onPrivacy} className="hover:text-[#0A4D8C] transition-colors cursor-pointer">Privacy Policy</button></li>
+              <li><button onClick={onTerms} className="hover:text-[#0A4D8C] transition-colors cursor-pointer">Terms & Conditions</button></li>
+              <li><button onClick={onCookiePolicy} className="hover:text-[#0A4D8C] transition-colors cursor-pointer">Cookie Policy</button></li>
+            </ul>
+          </div>
         </div>
       </div>
 

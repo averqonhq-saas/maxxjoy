@@ -853,7 +853,7 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-[10px] text-[#64748B]">Need help?</span>
-              <span className="text-sm font-bold text-[#1A1A1A]">+1 (800) 555-MAXX</span>
+              <a href="tel:+919804777879" className="text-sm font-bold text-[#1A1A1A] hover:text-[#0A4D8C] transition-colors">+91 98047 77879</a>
             </div>
             <button
               onClick={onBack}

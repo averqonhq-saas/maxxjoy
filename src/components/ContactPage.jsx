@@ -181,9 +181,16 @@ export const ContactPage = ({ onNavigateHome, onOpenFAQ }) => {
                   <span className="material-symbols-outlined text-2xl">call</span>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-slate-900 text-sm">Call Us</h4>
-                  <p className="text-xs font-bold text-slate-700 mt-0.5">{legalSettings?.phone || '+1 (555) 123-4567'}</p>
-                  <p className="text-[11px] text-slate-400 font-medium">WhatsApp: {legalSettings?.whatsapp || '+1 (555) 987-6543'}</p>
+                  <h4 className="font-extrabold text-slate-900 text-sm">Call & Mobile</h4>
+                  <div className="text-xs font-bold text-slate-700 mt-1 space-y-1">
+                    <p className="flex items-center gap-2">
+                      <a href="tel:+919804777879" className="hover:text-[#0A4D8C] transition-colors">+91 98047 77879</a>
+                      <a href="https://wa.me/919804777879" target="_blank" rel="noreferrer" className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold hover:bg-emerald-200">WhatsApp</a>
+                    </p>
+                    <p>
+                      <a href="tel:+917418407088" className="hover:text-[#0A4D8C] transition-colors">+91 74184 07088</a>
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -193,9 +200,13 @@ export const ContactPage = ({ onNavigateHome, onOpenFAQ }) => {
                   <span className="material-symbols-outlined text-2xl">mail</span>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-slate-900 text-sm">Email Us</h4>
-                  <p className="text-xs font-bold text-slate-700 mt-0.5">{legalSettings?.email || 'support@perfecttravel.com'}</p>
-                  <p className="text-[11px] text-slate-500 font-medium">{legalSettings?.supportHours || '24 Hours / 7 Days'}</p>
+                  <h4 className="font-extrabold text-slate-900 text-sm mb-1">Email Accounts</h4>
+                  <div className="text-xs font-semibold text-slate-700 space-y-1">
+                    <p><a href="mailto:Info@maxxjoytours.com" className="hover:text-[#0A4D8C] text-[#0A4D8C] font-bold transition-colors">Info@maxxjoytours.com</a></p>
+                    <p><a href="mailto:Yogaprathap@maxxjoytours.com" className="hover:text-[#0A4D8C] transition-colors">Yogaprathap@maxxjoytours.com</a></p>
+                    <p><a href="mailto:George@maxxjoytours.com" className="hover:text-[#0A4D8C] transition-colors">George@maxxjoytours.com</a></p>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium mt-2">Available 24/7 for Inquiries</p>
                 </div>
               </div>
 
@@ -205,9 +216,9 @@ export const ContactPage = ({ onNavigateHome, onOpenFAQ }) => {
                   <span className="material-symbols-outlined text-2xl">location_on</span>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-slate-900 text-sm">Office</h4>
-                  <p className="text-xs font-bold text-slate-700 mt-0.5 leading-relaxed whitespace-pre-wrap">
-                    {legalSettings?.address || '123 Adventure Way, Suite 400\\nNew York, NY 10001'}
+                  <h4 className="font-extrabold text-slate-900 text-sm">Head Office</h4>
+                  <p className="text-xs font-bold text-slate-700 mt-1 leading-relaxed whitespace-pre-wrap">
+                    NO 6 new annai indra nagar maruthamalai{'\n'}Coimbatore 641046, Tamil Nadu
                   </p>
                 </div>
               </div>
@@ -232,10 +243,10 @@ export const ContactPage = ({ onNavigateHome, onOpenFAQ }) => {
 
               <div className="p-4 flex items-center justify-between bg-white border-t border-slate-100">
                 <span className="text-xs font-bold text-slate-800 line-clamp-1 flex-1 pr-4">
-                  {legalSettings?.address?.split('\\n')[0] || '123 Adventure Way'}
+                  NO 6 new annai indra nagar maruthamalai, Coimbatore 641046
                 </span>
                 <a
-                  href="https://maps.google.com"
+                  href="https://www.google.com/maps/search/?api=1&query=NO+6+new+annai+indra+nagar+maruthamalai+Coimbatore+641046"
                   target="_blank"
                   rel="noreferrer"
                   className="text-[11px] font-black text-[#0A4D8C] hover:underline whitespace-nowrap"
