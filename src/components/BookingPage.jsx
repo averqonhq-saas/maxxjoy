@@ -101,7 +101,7 @@ function Row({ label, value, bold }) {
 }
 
 export const BookingPage = ({ onBack, onMyBookings }) => {
-  const { addBooking, formatPrice, showToast, applyPromoCode, selectedPackageForBooking, paymentSettings } = useApp();
+  const { addBooking, formatPrice, showToast, applyPromoCode, selectedPackageForBooking, paymentSettings, bookingPackageTiers, bookingAddonExtras } = useApp();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(5);
   const [selectedPackage, setSelectedPackage] = useState('deluxe');
@@ -115,6 +115,9 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
   const [upiId, setUpiId] = useState('');
   const [onlineTxnRef, setOnlineTxnRef] = useState('');
 
+  const packagesToRender = (bookingPackageTiers && bookingPackageTiers.length > 0) ? bookingPackageTiers : PACKAGES;
+  const extrasToRender = (bookingAddonExtras && bookingAddonExtras.length > 0) ? bookingAddonExtras : EXTRAS;
+
   const activeTour = selectedPackageForBooking || {
     title: 'Dubai Premium Luxury Escape',
     location: 'Dubai, UAE',
@@ -126,10 +129,10 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
   const totalSteps = STEPS.length;
   const progress = Math.round((currentStep / totalSteps) * 100);
 
-  const pkg = PACKAGES.find(p => p.id === selectedPackage);
-  const basePrice = activeTour.price || (pkg ? pkg.price * 2 : 1499);
+  const pkg = packagesToRender.find(p => p.id === selectedPackage) || packagesToRender[0];
+  const basePrice = activeTour.price || (pkg ? pkg.price : 1499);
   const extrasTotal = selectedExtras.reduce((sum, id) => {
-    const ex = EXTRAS.find(e => e.id === id);
+    const ex = extrasToRender.find(e => e.id === id);
     return sum + (ex ? ex.price : 0);
   }, 0);
   const subtotal = basePrice + extrasTotal;
@@ -391,7 +394,7 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {PACKAGES.map(p => (
+        {packagesToRender.map(p => (
           <label key={p.id} htmlFor={`pkg-${p.id}`} className="cursor-pointer block">
             <input
               id={`pkg-${p.id}`}
@@ -426,18 +429,19 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
                 </div>
               </div>
               <div className="flex items-end gap-1 mb-4">
-                <span className="text-xs text-[#64748B] mb-1">$</span>
-                <span className="text-2xl font-black text-[#1A1A1A]">{p.price.toLocaleString()}</span>
-                <span className="text-xs text-[#64748B] mb-1">/ night</span>
+                <span className="text-2xl font-black text-[#1A1A1A]">{formatPrice(p.price)}</span>
+                <span className="text-xs text-[#64748B] mb-1">/ fixed tier</span>
               </div>
-              <ul className="space-y-1.5">
-                {p.features.map(f => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-[#64748B]">
-                    <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 14 }}>check_circle</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
+              {p.features && (
+                <ul className="space-y-1.5">
+                  {p.features.map(f => (
+                    <li key={f} className="flex items-center gap-2 text-xs text-[#64748B]">
+                      <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 14 }}>check_circle</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </label>
         ))}
@@ -449,7 +453,7 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
     <section className="space-y-6">
       <SectionHeader num={3} title="Add Extras" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {EXTRAS.map(ex => {
+        {extrasToRender.map(ex => {
           const active = selectedExtras.includes(ex.id);
           return (
             <div
@@ -466,7 +470,7 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
                 'size-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all border',
                 active ? 'bg-white border-[#1A1A1A] text-[#1A1A1A]' : 'bg-[#F5F9FC] border-[#E2E8F0] text-[#64748B]'
               ].join(' ')}>
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{ex.icon}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{ex.icon || 'star'}</span>
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-start">
@@ -479,7 +483,7 @@ export const BookingPage = ({ onBack, onMyBookings }) => {
                   </div>
                 </div>
                 <p className="text-xs text-[#64748B] mt-0.5">{ex.desc}</p>
-                <p className="text-sm font-extrabold text-[#1A1A1A] mt-2">+${ex.price}</p>
+                <p className="text-sm font-extrabold text-[#1A1A1A] mt-2">+{formatPrice(ex.price)}</p>
               </div>
             </div>
           );

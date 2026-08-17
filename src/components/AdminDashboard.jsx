@@ -32,8 +32,53 @@ export const AdminDashboard = ({ onBack }) => {
     updateReview,
     deleteReview,
     legalSettings,
-    updateLegalSettings
+    updateLegalSettings,
+    currency,
+    bookingPackageTiers,
+    updateBookingPackageTiers,
+    bookingAddonExtras,
+    updateBookingAddonExtras
   } = useApp();
+
+  const [localPackageTiers, setLocalPackageTiers] = useState(() => bookingPackageTiers || []);
+  useEffect(() => {
+    if (bookingPackageTiers) setLocalPackageTiers(bookingPackageTiers);
+  }, [bookingPackageTiers]);
+
+  const [localAddonExtras, setLocalAddonExtras] = useState(() => bookingAddonExtras || []);
+  useEffect(() => {
+    if (bookingAddonExtras) setLocalAddonExtras(bookingAddonExtras);
+  }, [bookingAddonExtras]);
+
+  const handleSaveExtras = () => {
+    updateBookingAddonExtras(localAddonExtras);
+  };
+
+  const handleSaveTiers = () => {
+    updateBookingPackageTiers(localPackageTiers);
+  };
+
+  const handleAddExtra = () => {
+    setLocalAddonExtras(prev => [
+      ...prev,
+      { id: `extra-${Date.now()}`, label: 'New Custom Extra', price: 150, icon: 'add_circle', desc: 'Custom tour add-on' }
+    ]);
+  };
+
+  const handleRemoveExtra = (id) => {
+    setLocalAddonExtras(prev => prev.filter(e => e.id !== id));
+  };
+
+  const handleAddTier = () => {
+    setLocalPackageTiers(prev => [
+      ...prev,
+      { id: `tier-${Date.now()}`, name: 'Royal VIP Suite', desc: 'Ocean view · Private butler', price: 2500, badge: 'VIP', features: ['Private Butler 24/7', 'Helicopter Transfer'] }
+    ]);
+  };
+
+  const handleRemoveTier = (id) => {
+    setLocalPackageTiers(prev => prev.filter(t => t.id !== id));
+  };
 
   const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null);
 
@@ -441,6 +486,7 @@ export const AdminDashboard = ({ onBack }) => {
               { id: 'bookings', label: 'Bookings', icon: 'confirmation_number', badge: myBookings.length },
               { id: 'payments', label: 'Payments', icon: 'payments' },
               { id: 'payment-settings', label: 'Payment Settings', icon: 'settings_applications' },
+              { id: 'booking-options', label: 'Packages & Add-on Extras', icon: 'room_service' },
               { id: 'inquiries', label: 'Inquiries & Messages', icon: 'mark_email_unread', badge: inquiriesList.length },
               { id: 'customers', label: 'Customers', icon: 'group' },
               { id: 'reviews', label: 'Reviews', icon: 'star' },
@@ -1477,6 +1523,213 @@ export const AdminDashboard = ({ onBack }) => {
                 </button>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* ── 5.65 PACKAGES & ADD-ON EXTRAS TAB ─────────────────────── */}
+        {activeTab === 'booking-options' && (
+          <div className="space-y-8 max-w-5xl">
+            <div>
+              <h1 className="text-2xl font-black text-[#1A1A1A]">Package Tiers & Add-on Extras Control</h1>
+              <p className="text-xs text-[#64748B] mt-1">
+                Configure fixed prices and selection options for Package Tiers (Deluxe, Overwater Villa, Penthouse) and Add-on Extras (Airport Transfer, Spa, Desert Safari, Cruise).
+              </p>
+            </div>
+
+            {/* 1. ADD-ON EXTRAS ADMIN CONTROL (FIXED PRICES) */}
+            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
+                <div>
+                  <h3 className="text-base font-black text-[#1A1A1A]">1. Add-on Extras & Fixed Pricing</h3>
+                  <p className="text-xs text-[#64748B] mt-0.5">Fixed amounts set by admin for optional booking add-ons during checkout.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddExtra}
+                  className="bg-[#1A1A1A] text-white px-4 py-2 rounded-xl text-xs font-extrabold hover:bg-[#333] transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">add_circle</span>
+                  <span>+ Add New Extra</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {localAddonExtras.map((extra, index) => (
+                  <div key={extra.id || index} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3 relative group">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExtra(extra.id)}
+                      className="absolute top-3 right-3 text-slate-400 hover:text-rose-600 transition-colors text-xs font-bold"
+                      title="Remove Extra"
+                    >
+                      ✕ Remove
+                    </button>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2">
+                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Extra Label</label>
+                        <input
+                          type="text"
+                          value={extra.label || ''}
+                          onChange={(e) => {
+                            const updated = [...localAddonExtras];
+                            updated[index] = { ...updated[index], label: e.target.value };
+                            setLocalAddonExtras(updated);
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#0A4D8C]"
+                          placeholder="e.g. Airport Transfer"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Fixed Price ({currency === 'INR' ? '₹' : '$'})</label>
+                        <input
+                          type="number"
+                          value={extra.price || 0}
+                          onChange={(e) => {
+                            const updated = [...localAddonExtras];
+                            updated[index] = { ...updated[index], price: Number(e.target.value) };
+                            setLocalAddonExtras(updated);
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-900 focus:outline-none focus:border-[#0A4D8C]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Description</label>
+                      <input
+                        type="text"
+                        value={extra.desc || ''}
+                        onChange={(e) => {
+                          const updated = [...localAddonExtras];
+                          updated[index] = { ...updated[index], desc: e.target.value };
+                          setLocalAddonExtras(updated);
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 focus:outline-none focus:border-[#0A4D8C]"
+                        placeholder="e.g. Private luxury transfer from airport"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveExtras}
+                  className="bg-[#0A4D8C] text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-[#073c6e] shadow-md shadow-[#0A4D8C]/20 transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">save</span>
+                  <span>Save Extras Fixed Prices</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. PACKAGE SELECTION TIERS CONTROL */}
+            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
+                <div>
+                  <h3 className="text-base font-black text-[#1A1A1A]">2. Package Selection Tiers & Pricing</h3>
+                  <p className="text-xs text-[#64748B] mt-0.5">Admin-controlled suite and room package tier options for booking step 2.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddTier}
+                  className="bg-[#1A1A1A] text-white px-4 py-2 rounded-xl text-xs font-extrabold hover:bg-[#333] transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">add_circle</span>
+                  <span>+ Add Package Tier</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {localPackageTiers.map((tier, index) => (
+                  <div key={tier.id || index} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4 relative group">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTier(tier.id)}
+                      className="absolute top-4 right-4 text-slate-400 hover:text-rose-600 transition-colors text-xs font-bold"
+                      title="Remove Tier"
+                    >
+                      ✕ Remove
+                    </button>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Tier Name</label>
+                        <input
+                          type="text"
+                          value={tier.name || ''}
+                          onChange={(e) => {
+                            const updated = [...localPackageTiers];
+                            updated[index] = { ...updated[index], name: e.target.value };
+                            setLocalPackageTiers(updated);
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#0A4D8C]"
+                          placeholder="e.g. Deluxe Suite"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Fixed Price ({currency === 'INR' ? '₹' : '$'})</label>
+                        <input
+                          type="number"
+                          value={tier.price || 0}
+                          onChange={(e) => {
+                            const updated = [...localPackageTiers];
+                            updated[index] = { ...updated[index], price: Number(e.target.value) };
+                            setLocalPackageTiers(updated);
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-900 focus:outline-none focus:border-[#0A4D8C]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Badge (Optional)</label>
+                        <input
+                          type="text"
+                          value={tier.badge || ''}
+                          onChange={(e) => {
+                            const updated = [...localPackageTiers];
+                            updated[index] = { ...updated[index], badge: e.target.value };
+                            setLocalPackageTiers(updated);
+                          }}
+                          className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#FF7A00] focus:outline-none focus:border-[#0A4D8C]"
+                          placeholder="e.g. Popular, Luxury, VIP"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Description</label>
+                      <input
+                        type="text"
+                        value={tier.desc || ''}
+                        onChange={(e) => {
+                          const updated = [...localPackageTiers];
+                          updated[index] = { ...updated[index], desc: e.target.value };
+                          setLocalPackageTiers(updated);
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 focus:outline-none focus:border-[#0A4D8C]"
+                        placeholder="e.g. City view · King bed · Breakfast included"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveTiers}
+                  className="bg-[#0A4D8C] text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-[#073c6e] shadow-md shadow-[#0A4D8C]/20 transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">save</span>
+                  <span>Save Package Tiers & Fixed Prices</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

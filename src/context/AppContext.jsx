@@ -544,6 +544,75 @@ export const AppProvider = ({ children }) => {
       showToast('Special deal updated', 'info');
     }
   };
+  // ── Package Tiers & Add-on Extras Sync (Firebase Firestore) ────────────────
+  const [bookingPackageTiers, setBookingPackageTiers] = useState([
+    {
+      id: 'deluxe',
+      name: 'Deluxe Suite',
+      desc: 'City view · King bed · Breakfast included',
+      price: 1250,
+      badge: null,
+      features: ['Ocean Terrace Access', 'Complimentary Minibar', 'Daily Housekeeping'],
+    },
+    {
+      id: 'premium',
+      name: 'Overwater Villa',
+      desc: 'Private pool · Butler service · All-inclusive',
+      price: 1890,
+      badge: 'Popular',
+      features: ['Private Pool', '24/7 Butler Service', 'All-Inclusive Dining & Spa'],
+    },
+    {
+      id: 'penthouse',
+      name: 'Penthouse Suite',
+      desc: 'Panoramiv view · Helicopter transfer',
+      price: 3200,
+      badge: 'Luxury',
+      features: ['Private Helicopter Transfer', 'Private Chef Experience', 'VIP Airport Lounge'],
+    },
+  ]);
+
+  const [bookingAddonExtras, setBookingAddonExtras] = useState([
+    { id: 'transfer', label: 'Airport Transfer', price: 120, icon: 'airport_shuttle', desc: 'Private luxury car transfer' },
+    { id: 'spa', label: 'Spa Package', price: 350, icon: 'spa', desc: 'Full-day wellness retreat for 2' },
+    { id: 'desert', label: 'Desert Safari', price: 280, icon: 'terrain', desc: 'Sunset dune bashing + BBQ dinner' },
+    { id: 'cruise', label: 'Dhow Cruise', price: 180, icon: 'directions_boat', desc: 'Creek cruise with dinner & entertainment' },
+  ]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'booking_options'), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.packageTiers && data.packageTiers.length > 0) {
+          setBookingPackageTiers(data.packageTiers);
+        }
+        if (data.addonExtras && data.addonExtras.length > 0) {
+          setBookingAddonExtras(data.addonExtras);
+        }
+      }
+    }, () => {});
+    return () => unsub();
+  }, []);
+
+  const updateBookingPackageTiers = async (newTiers) => {
+    setBookingPackageTiers(newTiers);
+    try {
+      await setDoc(doc(db, 'settings', 'booking_options'), { packageTiers: newTiers }, { merge: true });
+      showToast('⚡ Package Selection tiers updated & saved in Firebase!', 'success');
+    } catch (e) {
+      showToast('Package tiers updated', 'info');
+    }
+  };
+
+  const updateBookingAddonExtras = async (newExtras) => {
+    setBookingAddonExtras(newExtras);
+    try {
+      await setDoc(doc(db, 'settings', 'booking_options'), { addonExtras: newExtras }, { merge: true });
+      showToast('⚡ Add-on Extras fixed prices updated & saved in Firebase!', 'success');
+    } catch (e) {
+      showToast('Add-on Extras updated', 'info');
+    }
+  };
 
   // ── Legal & Support Settings Sync (Firebase Firestore) ────────────────────
   const [legalSettings, setLegalSettings] = useState({
@@ -745,6 +814,9 @@ export const AppProvider = ({ children }) => {
         customersList,
         // Payment Settings
         paymentSettings, updatePaymentSettings,
+        // Package Tiers & Add-on Extras (Admin Fixed Prices)
+        bookingPackageTiers, updateBookingPackageTiers,
+        bookingAddonExtras, updateBookingAddonExtras,
         // Special Deal Banner
         specialDeal, updateSpecialDeal,
         // Legal & Support Settings
