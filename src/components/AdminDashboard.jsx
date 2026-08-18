@@ -216,7 +216,7 @@ export const AdminDashboard = ({ onBack }) => {
         const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         setMediaAssets(docs);
       }
-    }, () => {});
+    }, () => { });
     return () => unsub();
   }, []);
 
@@ -253,10 +253,10 @@ export const AdminDashboard = ({ onBack }) => {
               ...st,
               createdAt: serverTimestamp()
             });
-          } catch {}
+          } catch { }
         }
       }
-    }, () => {});
+    }, () => { });
     return () => unsub();
   }, []);
 
@@ -392,7 +392,7 @@ export const AdminDashboard = ({ onBack }) => {
     const confirmedCount = myBookings.filter(b => (b.status || '').toLowerCase().includes('confirm') || (b.status || '').toLowerCase().includes('upcoming')).length;
     const completedCount = myBookings.filter(b => (b.status || '').toLowerCase().includes('complete')).length;
     const cancelledCount = myBookings.filter(b => (b.status || '').toLowerCase().includes('cancel')).length;
-    
+
     const activePackagesCount = packagesList.filter(p => p.status === 'Active').length;
     const totalDestinationsCount = destinationsList.filter(d => d.status === 'Active').length;
     const totalCustomersCount = (customersList?.length || 0) + myBookings.length;
@@ -453,7 +453,7 @@ export const AdminDashboard = ({ onBack }) => {
         ? b.estimatedCost
         : (parseFloat(b.estimatedCost) || parseFloat(b.totalAmount) || 1499);
       const isConfirmed = (b.status || '').toLowerCase().includes('confirm') || (b.status || '').toLowerCase().includes('upcoming') || (b.status || '').toLowerCase().includes('complete');
-      
+
       if (!map[dest]) {
         map[dest] = { name: dest, enquiries: 0, confirmed: 0, revenue: 0, travelers: 0 };
       }
@@ -489,7 +489,7 @@ export const AdminDashboard = ({ onBack }) => {
   const monthlyTrendData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonthIdx = new Date().getMonth();
-    
+
     // Calculate 6 months sequence ending on current month
     const last6Months = [];
     for (let i = 5; i >= 0; i--) {
@@ -506,7 +506,7 @@ export const AdminDashboard = ({ onBack }) => {
       } else if (b.travelDate) {
         bDate = new Date(b.travelDate);
       }
-      
+
       const mIdx = bDate && !isNaN(bDate.getTime()) ? bDate.getMonth() : currentMonthIdx;
       const target = last6Months.find(m => m.monthIdx === mIdx);
       if (target) {
@@ -776,7 +776,7 @@ export const AdminDashboard = ({ onBack }) => {
 
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-[#0A4D8C] bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-              Zoho Business Admin
+              maxxjoy Business Admin
             </span>
             <h2 className="text-2xl font-black font-header text-[#1F2937] mt-3">Staff Authentication</h2>
             <p className="text-xs text-[#6B7280] mt-1">
@@ -850,13 +850,13 @@ export const AdminDashboard = ({ onBack }) => {
     );
   }
 
-  // ── Zoho-Style Main Dashboard Shell ──────────────────────────────────────
+  // ── maxxjoy-Style Main Dashboard Shell ──────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#F7F8FA] text-[#1F2937] font-sans flex flex-col antialiased">
 
-      {/* ── TOP NAVIGATION BAR (Zoho Clean White Header) ───────────── */}
+      {/* ── TOP NAVIGATION BAR (maxxjoy Clean White Header) ───────────── */}
       <header className="h-14 bg-white border-b border-[#E5E7EB] px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-        
+
         {/* Left: Hamburger & Brand */}
         <div className="flex items-center gap-3">
           <button
@@ -902,7 +902,7 @@ export const AdminDashboard = ({ onBack }) => {
 
         {/* Right: Actions, Role Selector, Notifications, Profile */}
         <div className="flex items-center gap-2.5">
-          
+
           {/* + New Quick Action Dropdown */}
           <div className="relative">
             <button
@@ -1033,14 +1033,13 @@ export const AdminDashboard = ({ onBack }) => {
 
       {/* ── MAIN WORKSPACE CONTAINER (Sidebar + Content) ──────────── */}
       <div className="flex-1 flex overflow-hidden">
-        
-        {/* ── SIDEBAR NAVIGATION (Zoho Crisp Clean Sidebar) ────────── */}
-        <aside className={`bg-white border-r border-[#E5E7EB] flex flex-col justify-between transition-all duration-200 ${
-          sidebarCollapsed ? 'w-16' : 'w-60'
-        } flex-shrink-0 z-20`}>
-          
+
+        {/* ── SIDEBAR NAVIGATION (maxxjoy Crisp Clean Sidebar) ────────── */}
+        <aside className={`bg-white border-r border-[#E5E7EB] flex flex-col justify-between transition-all duration-200 ${sidebarCollapsed ? 'w-16' : 'w-60'
+          } flex-shrink-0 z-20`}>
+
           <div className="p-3 space-y-6 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
-            
+
             {/* Core Section */}
             <div className="space-y-1">
               {!sidebarCollapsed && (
@@ -1063,11 +1062,10 @@ export const AdminDashboard = ({ onBack }) => {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      isActive
+                    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${isActive
                         ? 'bg-blue-50 text-[#0A4D8C] border-l-3 border-[#0A4D8C]'
                         : 'text-[#4B5563] hover:bg-[#F7F8FA] hover:text-[#1F2937]'
-                    }`}
+                      }`}
                     title={sidebarCollapsed ? item.label : undefined}
                   >
                     <div className="flex items-center gap-2.5">
@@ -1100,11 +1098,10 @@ export const AdminDashboard = ({ onBack }) => {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      isActive
+                    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${isActive
                         ? 'bg-blue-50 text-[#0A4D8C] border-l-3 border-[#0A4D8C]'
                         : 'text-[#4B5563] hover:bg-[#F7F8FA] hover:text-[#1F2937]'
-                    }`}
+                      }`}
                     title={sidebarCollapsed ? item.label : undefined}
                   >
                     <div className="flex items-center gap-2.5">
@@ -1137,11 +1134,10 @@ export const AdminDashboard = ({ onBack }) => {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      isActive
+                    className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${isActive
                         ? 'bg-blue-50 text-[#0A4D8C] border-l-3 border-[#0A4D8C]'
                         : 'text-[#4B5563] hover:bg-[#F7F8FA] hover:text-[#1F2937]'
-                    }`}
+                      }`}
                     title={sidebarCollapsed ? item.label : undefined}
                   >
                     <div className="flex items-center gap-2.5">
@@ -1173,11 +1169,11 @@ export const AdminDashboard = ({ onBack }) => {
         <main className="flex-1 p-5 md:p-8 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
 
           {/* ══════════════════════════════════════════════════════════
-              1. OPERATIONAL DASHBOARD (Zoho-Style Business Overview)
+              1. OPERATIONAL DASHBOARD (maxxjoy-Style Business Overview)
              ══════════════════════════════════════════════════════════ */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 max-w-7xl mx-auto">
-              
+
               {/* Header Greeting */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E5E7EB]">
                 <div>
@@ -1198,7 +1194,7 @@ export const AdminDashboard = ({ onBack }) => {
 
               {/* 4 Operational Top KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
+
                 {/* Total Bookings */}
                 <div
                   onClick={() => { setBookingRequestFilter('All'); setActiveTab('bookings'); }}
@@ -1279,7 +1275,7 @@ export const AdminDashboard = ({ onBack }) => {
 
               {/* Visual Charts Grid (100% Dynamic Real Data) */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                
+
                 {/* Booking Overview Bar Chart */}
                 <div className="lg:col-span-2 bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-xs space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E5E7EB]">
@@ -1292,7 +1288,7 @@ export const AdminDashboard = ({ onBack }) => {
                     </span>
                   </div>
 
-                  {/* Zoho Clean Bar Visualizer */}
+                  {/* maxxjoy Clean Bar Visualizer */}
                   <div className="h-44 flex items-end justify-between gap-3 pt-6 px-2">
                     {monthlyTrendData.map((bar, idx) => (
                       <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
@@ -1302,9 +1298,8 @@ export const AdminDashboard = ({ onBack }) => {
                         <div className="w-full max-w-[36px] bg-[#F3F4F6] rounded-t-md h-32 flex items-end p-0.5">
                           <div
                             style={{ height: bar.height }}
-                            className={`w-full rounded-t-sm transition-all duration-300 ${
-                              bar.highlight ? 'bg-[#0A4D8C] group-hover:bg-[#073C6E]' : 'bg-[#3FA9F5]/70 group-hover:bg-[#3FA9F5]'
-                            }`}
+                            className={`w-full rounded-t-sm transition-all duration-300 ${bar.highlight ? 'bg-[#0A4D8C] group-hover:bg-[#073C6E]' : 'bg-[#3FA9F5]/70 group-hover:bg-[#3FA9F5]'
+                              }`}
                           ></div>
                         </div>
                         <span className="text-[11px] font-bold text-[#6B7280]">{bar.month}</span>
@@ -1391,15 +1386,14 @@ export const AdminDashboard = ({ onBack }) => {
                             <span className="font-bold text-[#FF7A00]">{booking.hotelPreference || '4 Star'}</span> · {booking.travelers || '2 Adults'}
                           </td>
                           <td className="p-3">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                              (booking.status || '').includes('Confirm')
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold ${(booking.status || '').includes('Confirm')
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : (booking.status || '').includes('Review')
                                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                   : (booking.status || '').includes('Cancel')
                                     ? 'bg-rose-50 text-rose-700 border border-rose-200'
                                     : 'bg-amber-50 text-amber-700 border border-amber-200'
-                            }`}>
+                              }`}>
                               ● {booking.status || 'Request Submitted'}
                             </span>
                           </td>
@@ -1422,11 +1416,11 @@ export const AdminDashboard = ({ onBack }) => {
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              2. DESTINATIONS MANAGEMENT (Zoho-Style Data Table)
+              2. DESTINATIONS MANAGEMENT (maxxjoy-Style Data Table)
              ══════════════════════════════════════════════════════════ */}
           {activeTab === 'destinations' && (
             <div className="space-y-4 max-w-7xl mx-auto">
-              
+
               {/* Header & Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E5E7EB]">
                 <div>
@@ -1451,7 +1445,7 @@ export const AdminDashboard = ({ onBack }) => {
 
               {/* Filter Toolbar */}
               <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
-                
+
                 {/* Search */}
                 <div className="relative w-full sm:w-64">
                   <span className="material-symbols-outlined absolute left-2.5 top-2 text-[#9CA3AF] text-sm">search</span>
@@ -1504,7 +1498,7 @@ export const AdminDashboard = ({ onBack }) => {
 
               </div>
 
-              {/* Zoho Dense Table */}
+              {/* maxxjoy Dense Table */}
               <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
@@ -1561,11 +1555,10 @@ export const AdminDashboard = ({ onBack }) => {
                           <td className="p-3">
                             <button
                               onClick={() => updateDestination(dest.id, { status: dest.status === 'Active' ? 'Inactive' : 'Active' })}
-                              className={`px-2.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                dest.status === 'Active'
+                              className={`px-2.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${dest.status === 'Active'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : 'bg-slate-100 text-slate-600 border-slate-200'
-                              }`}
+                                }`}
                             >
                               {dest.status || 'Active'}
                             </button>
@@ -1573,11 +1566,10 @@ export const AdminDashboard = ({ onBack }) => {
                           <td className="p-3">
                             <button
                               onClick={() => updateDestination(dest.id, { featured: !dest.featured })}
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                dest.featured
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${dest.featured
                                   ? 'bg-amber-50 text-amber-800 border-amber-200'
                                   : 'bg-slate-50 text-slate-400 border-slate-200'
-                              }`}
+                                }`}
                             >
                               {dest.featured ? 'Yes ⭐' : 'No'}
                             </button>
@@ -1619,11 +1611,11 @@ export const AdminDashboard = ({ onBack }) => {
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              3. TOUR PACKAGES MANAGEMENT (Zoho-Style Data Table)
+              3. TOUR PACKAGES MANAGEMENT (maxxjoy-Style Data Table)
              ══════════════════════════════════════════════════════════ */}
           {activeTab === 'packages' && (
             <div className="space-y-4 max-w-7xl mx-auto">
-              
+
               {/* Header & Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E5E7EB]">
                 <div>
@@ -1648,7 +1640,7 @@ export const AdminDashboard = ({ onBack }) => {
 
               {/* Filter Toolbar */}
               <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
-                
+
                 {/* Search */}
                 <div className="relative w-full sm:w-64">
                   <span className="material-symbols-outlined absolute left-2.5 top-2 text-[#9CA3AF] text-sm">search</span>
@@ -1663,6 +1655,16 @@ export const AdminDashboard = ({ onBack }) => {
 
                 {/* Status & Destination Filters */}
                 <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <select
+                    value={pkgDestFilter}
+                    onChange={e => setPkgDestFilter(e.target.value)}
+                    className="bg-[#F7F8FA] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
+                  >
+                    <option value="All">All Destinations</option>
+                    {destinationsList.map(d => (
+                      <option key={d.id} value={d.title}>{d.title}</option>
+                    ))}
+                  </select>
                   <select
                     value={pkgStatusFilter}
                     onChange={e => setPkgStatusFilter(e.target.value)}
@@ -1690,7 +1692,7 @@ export const AdminDashboard = ({ onBack }) => {
 
               </div>
 
-              {/* Zoho Dense Table */}
+              {/* maxxjoy Dense Table */}
               <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
@@ -1745,11 +1747,10 @@ export const AdminDashboard = ({ onBack }) => {
                           <td className="p-3">
                             <button
                               onClick={() => updatePackage(pkg.id, { status: pkg.status === 'Active' ? 'Inactive' : 'Active' })}
-                              className={`px-2.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                pkg.status === 'Active'
+                              className={`px-2.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${pkg.status === 'Active'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : 'bg-slate-100 text-slate-600 border-slate-200'
-                              }`}
+                                }`}
                             >
                               {pkg.status || 'Active'}
                             </button>
@@ -1796,11 +1797,11 @@ export const AdminDashboard = ({ onBack }) => {
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              4. BOOKING REQUESTS (Zoho CRM Pipeline & Table Views)
+              4. BOOKING REQUESTS (maxxjoy CRM Pipeline & Table Views)
              ══════════════════════════════════════════════════════════ */}
           {activeTab === 'bookings' && (
             <div className="space-y-4 max-w-7xl mx-auto">
-              
+
               {/* Header & View Mode Switcher */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E5E7EB]">
                 <div>
@@ -1813,22 +1814,20 @@ export const AdminDashboard = ({ onBack }) => {
                   <div className="bg-[#F7F8FA] border border-[#E5E7EB] rounded-lg p-0.5 flex">
                     <button
                       onClick={() => setBookingViewMode('pipeline')}
-                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        bookingViewMode === 'pipeline'
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${bookingViewMode === 'pipeline'
                           ? 'bg-white text-[#0A4D8C] shadow-2xs'
                           : 'text-[#6B7280] hover:text-[#1F2937]'
-                      }`}
+                        }`}
                     >
                       <span className="material-symbols-outlined text-sm">view_kanban</span>
                       <span>Pipeline</span>
                     </button>
                     <button
                       onClick={() => setBookingViewMode('table')}
-                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        bookingViewMode === 'table'
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${bookingViewMode === 'table'
                           ? 'bg-white text-[#0A4D8C] shadow-2xs'
                           : 'text-[#6B7280] hover:text-[#1F2937]'
-                      }`}
+                        }`}
                     >
                       <span className="material-symbols-outlined text-sm">table_rows</span>
                       <span>Table</span>
@@ -1839,18 +1838,17 @@ export const AdminDashboard = ({ onBack }) => {
 
               {/* Status Filter Tabs & Search */}
               <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
-                
+
                 {/* Status Tabs */}
                 <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                   {['All', 'New', 'Under Review', 'Confirmed', 'Completed', 'Cancelled'].map(st => (
                     <button
                       key={st}
                       onClick={() => setBookingRequestFilter(st)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
-                        bookingRequestFilter === st
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${bookingRequestFilter === st
                           ? 'bg-[#0A4D8C] text-white'
                           : 'bg-[#F7F8FA] text-[#6B7280] hover:bg-[#E5E7EB] hover:text-[#1F2937]'
-                      }`}
+                        }`}
                     >
                       {st}
                     </button>
@@ -1874,7 +1872,7 @@ export const AdminDashboard = ({ onBack }) => {
               {/* CRM Pipeline Kanban Board View */}
               {bookingViewMode === 'pipeline' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 pt-2">
-                  
+
                   {[
                     { title: 'NEW REQUESTS', statusKey: 'Submit', color: 'border-amber-400 bg-amber-50/50', badgeColor: 'bg-amber-100 text-amber-800' },
                     { title: 'UNDER REVIEW', statusKey: 'Review', color: 'border-blue-400 bg-blue-50/50', badgeColor: 'bg-blue-100 text-blue-800' },
@@ -1996,15 +1994,14 @@ export const AdminDashboard = ({ onBack }) => {
                               {b.estimatedCost ? formatPrice(b.estimatedCost) : 'Custom Quote'}
                             </td>
                             <td className="p-3">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-extrabold border ${
-                                (b.status || '').includes('Confirm')
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-extrabold border ${(b.status || '').includes('Confirm')
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : (b.status || '').includes('Review')
                                     ? 'bg-blue-50 text-blue-700 border-blue-200'
                                     : (b.status || '').includes('Cancel')
                                       ? 'bg-rose-50 text-rose-700 border-rose-200'
                                       : 'bg-amber-50 text-amber-700 border-amber-200'
-                              }`}>
+                                }`}>
                                 ● {b.status || 'Request Submitted'}
                               </span>
                             </td>
@@ -2028,7 +2025,7 @@ export const AdminDashboard = ({ onBack }) => {
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              5. CUSTOMER MANAGEMENT (Zoho CRM Customers)
+              5. CUSTOMER MANAGEMENT (maxxjoy CRM Customers)
              ══════════════════════════════════════════════════════════ */}
           {activeTab === 'customers' && (
             <div className="space-y-4 max-w-7xl mx-auto">
@@ -2170,11 +2167,10 @@ export const AdminDashboard = ({ onBack }) => {
                           </td>
                           <td className="p-3 text-[#6B7280] max-w-sm truncate">{rev.text}</td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              rev.status === 'Published'
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${rev.status === 'Published'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-amber-50 text-amber-700 border border-amber-200'
-                            }`}>
+                              }`}>
                               {rev.status || 'Published'}
                             </span>
                           </td>
@@ -2226,7 +2222,7 @@ export const AdminDashboard = ({ onBack }) => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
+
                 {/* Offer Edit Form */}
                 <form onSubmit={handleSaveDeal} className="lg:col-span-2 bg-white border border-[#E5E7EB] rounded-xl p-5 space-y-4 shadow-xs text-xs">
                   <h3 className="font-extrabold text-[#1F2937] text-sm pb-2 border-b border-[#E5E7EB]">
@@ -2440,11 +2436,10 @@ export const AdminDashboard = ({ onBack }) => {
                   <button
                     key={cat}
                     onClick={() => setGalleryFilter(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      galleryFilter === cat
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${galleryFilter === cat
                         ? 'bg-[#0A4D8C] text-white'
                         : 'bg-[#F7F8FA] text-[#6B7280] hover:bg-[#E5E7EB] hover:text-[#1F2937]'
-                    }`}
+                      }`}
                   >
                     {cat}
                   </button>
@@ -2779,13 +2774,12 @@ export const AdminDashboard = ({ onBack }) => {
                               {formatPrice(cost)}
                             </td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                (b.status || '').includes('Confirm')
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${(b.status || '').includes('Confirm')
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : (b.status || '').includes('Review')
-                                  ? 'bg-blue-50 text-[#0A4D8C] border-blue-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
-                              }`}>
+                                    ? 'bg-blue-50 text-[#0A4D8C] border-blue-200'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}>
                                 {b.status || 'Request Submitted'}
                               </span>
                             </td>
@@ -2841,11 +2835,10 @@ export const AdminDashboard = ({ onBack }) => {
                           <td className="p-3 font-bold text-[#0A4D8C]">{inq.subject || inq.tourInterested || 'Tour Package Inquiry'}</td>
                           <td className="p-3 text-[#6B7280] max-w-xs truncate">{inq.message || inq.requirements}</td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              inq.status === 'Resolved'
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${inq.status === 'Resolved'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-amber-50 text-amber-700 border border-amber-200'
-                            }`}>
+                              }`}>
                               {inq.status || 'New'}
                             </span>
                           </td>
@@ -2907,11 +2900,10 @@ export const AdminDashboard = ({ onBack }) => {
                   <button
                     key={sub.id}
                     onClick={() => setSettingsSubTab(sub.id)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      settingsSubTab === sub.id
+                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${settingsSubTab === sub.id
                         ? 'bg-[#0A4D8C] text-white shadow-xs'
                         : 'text-[#6B7280] hover:text-[#1F2937] hover:bg-[#F7F8FA]'
-                    }`}
+                      }`}
                   >
                     {sub.label}
                   </button>
@@ -3288,11 +3280,10 @@ export const AdminDashboard = ({ onBack }) => {
                             <td className="p-3">
                               <button
                                 onClick={() => handleToggleStaffStatus(st.id, st.status || 'Active')}
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                  (st.status || 'Active') === 'Active'
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${(st.status || 'Active') === 'Active'
                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                                     : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                                }`}
+                                  }`}
                                 title="Click to toggle status"
                               >
                                 {st.status || 'Active'}
@@ -3369,23 +3360,20 @@ export const AdminDashboard = ({ onBack }) => {
                             </span>
                           </td>
                           <td className="p-3 text-center">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                              row.m === 'No Access' ? 'bg-slate-50 text-[#9CA3AF] border-slate-200' : 'bg-blue-50 text-[#0A4D8C] border-blue-200'
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${row.m === 'No Access' ? 'bg-slate-50 text-[#9CA3AF] border-slate-200' : 'bg-blue-50 text-[#0A4D8C] border-blue-200'
+                              }`}>
                               {row.m}
                             </span>
                           </td>
                           <td className="p-3 text-center">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                              row.bs === 'No Access' ? 'bg-slate-50 text-[#9CA3AF] border-slate-200' : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${row.bs === 'No Access' ? 'bg-slate-50 text-[#9CA3AF] border-slate-200' : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                              }`}>
                               {row.bs}
                             </span>
                           </td>
                           <td className="p-3 text-center pr-4">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                              row.cs === 'No Access' ? 'bg-slate-50 text-[#9CA3AF] border-slate-200' : 'bg-purple-50 text-purple-800 border-purple-200'
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${row.cs === 'No Access' ? 'bg-slate-50 text-[#9CA3AF] border-slate-200' : 'bg-purple-50 text-purple-800 border-purple-200'
+                              }`}>
                               {row.cs}
                             </span>
                           </td>
@@ -3702,19 +3690,18 @@ export const AdminDashboard = ({ onBack }) => {
       {selectedAdminBooking && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl border border-[#E5E7EB] max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto text-xs">
-            
+
             {/* Modal Header */}
             <div className="flex justify-between items-start pb-3 border-b border-[#E5E7EB]">
               <div>
-                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-extrabold border mb-1 ${
-                  adminEditStatus.includes('Confirm')
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-extrabold border mb-1 ${adminEditStatus.includes('Confirm')
                     ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                     : adminEditStatus.includes('Review')
                       ? 'bg-blue-50 border-blue-200 text-blue-800'
                       : adminEditStatus.includes('Cancel')
                         ? 'bg-rose-50 border-rose-200 text-rose-800'
                         : 'bg-amber-50 border-amber-200 text-amber-800'
-                }`}>
+                  }`}>
                   ● {adminEditStatus}
                 </span>
                 <h3 className="text-xl font-black text-[#1F2937] font-header">
