@@ -8,8 +8,8 @@ export const InvoiceModal = ({ booking, onClose }) => {
   if (!booking) return null;
 
   const bookingId = booking.bookingId || `TRV${Math.floor(10000 + Math.random() * 90000)}`;
-  const invoiceNum = `INV-${bookingId.replace('TRV', '')}-${new Date().getFullYear()}`;
-  const issueDate = booking.dateStr || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const invoiceNum = `INV-${bookingId.replace('TRV-', '').replace('TRV', '')}-${new Date().getFullYear()}`;
+  const issueDate = booking.dateStr || (booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }));
 
   const isPlaceholder = (str) => !str || str.includes('Perfect Travel') || str.includes('123 Adventure') || str.includes('555') || str.includes('perfecttravel');
 
@@ -25,15 +25,26 @@ export const InvoiceModal = ({ booking, onClose }) => {
 
   const tourTitle = booking.packageTitle || booking.title || 'Custom Luxury Tour Package';
   const travelDate = booking.travelDate || booking.date || 'Upcoming Travel';
-  const travelers = booking.travelers || '2 Adults';
   const duration = booking.duration || '5 Days / 4 Nights';
 
-  const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (parseFloat(booking.totalAmount) || parseFloat(booking.price) || 1499);
-  const paidAmount = typeof booking.amountPaid === 'number' ? booking.amountPaid : (parseFloat(booking.amountPaid) || parseFloat(booking.totalPaid) || totalAmount);
-  const balanceDue = typeof booking.balanceDue === 'number' ? booking.balanceDue : (parseFloat(booking.balanceDue) || (totalAmount - paidAmount));
+  const adults = parseInt(booking.adults) || 2;
+  const children = parseInt(booking.children) || 0;
+  const travelers = booking.travelers || `${adults} Adults${children > 0 ? `, ${children} Children` : ''}`;
+
+  // Robust total amount resolution matching cards and admin CRM
+  const totalAmount = typeof booking.estimatedCost === 'number' && booking.estimatedCost > 0
+    ? booking.estimatedCost
+    : (typeof booking.totalAmount === 'number' && booking.totalAmount > 0
+      ? booking.totalAmount
+      : (parseFloat(booking.estimatedCost) || parseFloat(booking.totalAmount) || ((parseFloat(booking.price || booking.basePrice) || 1499) * adults)));
+
+  const perAdultPrice = booking.price ? parseFloat(booking.price) : Math.round(totalAmount / (adults + children * 0.6));
+  const perChildPrice = Math.round(perAdultPrice * 0.6);
+  const totalAdultFare = perAdultPrice * adults;
+  const totalChildFare = perChildPrice * children;
 
   const basePrice = Math.round(totalAmount * 0.95);
-  const gstAmount = Math.round(totalAmount * 0.05);
+  const gstAmount = totalAmount - basePrice;
 
   const handlePrint = () => {
     window.print();
@@ -44,7 +55,7 @@ export const InvoiceModal = ({ booking, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans print:p-0 print:bg-white">
+    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans print:p-0 print:bg-white antialiased">
       <div className="bg-white rounded-3xl border border-slate-200 max-w-3xl w-full p-6 sm:p-10 shadow-2xl space-y-6 relative my-8 print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-none">
         
         {/* Top Floating Close Button for Screen */}
@@ -73,26 +84,26 @@ export const InvoiceModal = ({ booking, onClose }) => {
           </div>
 
           <div className="sm:text-right">
-            <span className="text-2xl font-black text-slate-900 tracking-wider uppercase block">
-              Tax Invoice
+            <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-wider uppercase block">
+              Booking Quotation & Invoice
             </span>
             <span className="text-xs font-mono font-bold text-[#0A4D8C] block mt-0.5">
               {invoiceNum}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 mt-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300 mt-2">
               <span className="size-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              PAYMENT VERIFIED ✓
+              <span>{booking.status || 'CONFIRMED QUOTATION'}</span>
             </span>
           </div>
         </div>
 
         {/* ── DETAILS GRID ────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 rounded-2xl bg-slate-50 border border-slate-200/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs">
           <div>
             <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">Issued By</h4>
-            <p className="text-xs font-bold text-slate-900">{companyName}</p>
-            <p className="text-xs font-medium text-slate-600 mt-1 leading-relaxed whitespace-pre-wrap">{companyAddress}</p>
-            <p className="text-xs font-medium text-slate-600 mt-2">
+            <p className="font-bold text-slate-900">{companyName}</p>
+            <p className="font-medium text-slate-600 mt-1 leading-relaxed whitespace-pre-wrap">{companyAddress}</p>
+            <p className="font-medium text-slate-600 mt-2">
               <strong className="text-slate-800">Phone:</strong> {companyPhone}<br />
               <strong className="text-slate-800">Email:</strong> {companyEmail}<br />
               <strong className="text-slate-800">GSTIN:</strong> 33AAACM9804F1Z0
@@ -101,78 +112,88 @@ export const InvoiceModal = ({ booking, onClose }) => {
 
           <div>
             <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">Billed To (Traveler)</h4>
-            <p className="text-xs font-bold text-slate-900">{guestName}</p>
-            <p className="text-xs font-medium text-slate-600 mt-1">
+            <p className="font-bold text-slate-900">{guestName}</p>
+            <p className="font-medium text-slate-600 mt-1">
               <strong className="text-slate-800">Email:</strong> {guestEmail}<br />
               <strong className="text-slate-800">Mobile:</strong> {guestPhone}<br />
-              <strong className="text-slate-800">Booking Ref:</strong> <span className="font-mono text-[#0A4D8C]">{bookingId}</span><br />
-              <strong className="text-slate-800">Invoice Date:</strong> {issueDate}
+              <strong className="text-slate-800">Booking Ref:</strong> <span className="font-mono text-[#0A4D8C]">#{bookingId}</span><br />
+              <strong className="text-slate-800">Travel Date:</strong> {travelDate}
             </p>
           </div>
         </div>
 
-        {/* ── ITEMIZED TABLE ──────────────────────────────────────────────── */}
+        {/* ── ITEMIZED BREAKDOWN TABLE ──────────────────────────────────────── */}
         <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-100 text-slate-700 text-[11px] font-black uppercase tracking-wider">
-                <th className="p-4">Item & Description</th>
-                <th className="p-4">Travel Details</th>
-                <th className="p-4 text-center">Qty</th>
-                <th className="p-4 text-right">Amount</th>
+                <th className="p-3.5">Package Item & Description</th>
+                <th className="p-3.5 text-center">Travellers</th>
+                <th className="p-3.5 text-right">Unit Rate</th>
+                <th className="p-3.5 text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
               <tr>
-                <td className="p-4">
+                <td className="p-3.5">
                   <span className="font-black text-slate-900 block text-sm">{tourTitle}</span>
-                  <span className="text-[11px] text-slate-500">Luxury Hotel Stay, Private Transfers, Sightseeing & Concierge</span>
+                  <span className="text-[11px] text-slate-500">
+                    {duration} • {travelers} • Hotel: {booking.hotelPreference || '4 Star'} Class
+                  </span>
                 </td>
-                <td className="p-4">
-                  <span className="font-bold text-slate-800">{travelDate}</span><br />
-                  <span className="text-[11px] text-slate-500">{duration} • {travelers}</span>
-                </td>
-                <td className="p-4 text-center font-bold">1</td>
-                <td className="p-4 text-right font-black text-slate-900">{formatPrice(basePrice)}</td>
+                <td className="p-3.5 text-center font-bold">{adults} Adult(s)</td>
+                <td className="p-3.5 text-right font-mono">{formatPrice(perAdultPrice)}</td>
+                <td className="p-3.5 text-right font-black text-slate-900 font-mono">{formatPrice(totalAdultFare)}</td>
               </tr>
+              {children > 0 && (
+                <tr>
+                  <td className="p-3.5">
+                    <span className="font-bold text-slate-800">Child Fare (Special 40% Discount)</span>
+                    <span className="text-[11px] text-slate-500 block">Includes extra bed, meals & activities</span>
+                  </td>
+                  <td className="p-3.5 text-center font-bold">{children} Child</td>
+                  <td className="p-3.5 text-right font-mono">{formatPrice(perChildPrice)}</td>
+                  <td className="p-3.5 text-right font-black text-slate-900 font-mono">{formatPrice(totalChildFare)}</td>
+                </tr>
+              )}
               <tr>
-                <td className="p-4">
-                  <span className="font-bold text-slate-800">Government Taxes & Service GST (5%)</span>
-                  <span className="text-[11px] text-slate-500 block">Includes 5% Govt Tourism Tax & Mandatory GST</span>
+                <td className="p-3.5">
+                  <span className="font-bold text-slate-800">Inclusions & Logistics</span>
+                  <span className="text-[11px] text-slate-500 block">
+                    {[
+                      booking.transportRequired?.airportPickup && 'Airport Pickup',
+                      booking.transportRequired?.localTransportation && 'Local Transportation',
+                      'Daily Breakfasts & Sightseeing Excursions'
+                    ].filter(Boolean).join(' • ')}
+                  </span>
                 </td>
-                <td className="p-4 text-[11px] font-mono text-slate-500">GST-5%</td>
-                <td className="p-4 text-center font-bold">1</td>
-                <td className="p-4 text-right font-black text-slate-900">{formatPrice(gstAmount)}</td>
+                <td className="p-3.5 text-center font-bold text-emerald-700">Included</td>
+                <td className="p-3.5 text-right text-emerald-700 font-bold">Complimentary</td>
+                <td className="p-3.5 text-right font-bold text-emerald-700">Included</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* ── TOTALS BREAKDOWN ────────────────────────────────────────────── */}
+        {/* ── TOTALS & TAX BREAKDOWN ────────────────────────────────────────── */}
         <div className="flex flex-col items-end pt-2">
-          <div className="w-full sm:w-72 space-y-2 text-xs font-medium border-t border-slate-200 pt-3">
+          <div className="w-full sm:w-80 space-y-2 text-xs font-medium border-t border-slate-200 pt-3">
             <div className="flex justify-between text-slate-600">
-              <span>Subtotal:</span>
-              <span className="font-bold text-slate-800">{formatPrice(basePrice)}</span>
+              <span>Subtotal Base Fare (95%):</span>
+              <span className="font-bold text-slate-800 font-mono">{formatPrice(basePrice)}</span>
             </div>
             <div className="flex justify-between text-slate-600">
-              <span>GST & Taxes (5%):</span>
-              <span className="font-bold text-slate-800">{formatPrice(gstAmount)}</span>
+              <span>Mandatory GST & Tourism Tax (5%):</span>
+              <span className="font-bold text-slate-800 font-mono">{formatPrice(gstAmount)}</span>
             </div>
             <div className="flex justify-between text-base font-black text-slate-900 border-t-2 border-slate-900 pt-2 mt-1">
-              <span>Total Package Cost:</span>
-              <span>{formatPrice(totalAmount)}</span>
+              <span>Confirmed / Estimated Total:</span>
+              <span className="font-mono">{formatPrice(totalAmount)}</span>
             </div>
-            <div className="flex justify-between text-emerald-700 font-extrabold text-xs bg-emerald-50 p-2 rounded-xl border border-emerald-200 mt-2">
-              <span>Amount Received:</span>
-              <span>{formatPrice(paidAmount)} ✓</span>
+            <div className="flex justify-between text-emerald-800 font-bold text-xs bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 mt-2">
+              <span>Payment Condition:</span>
+              <span>Enquiry Based · No Online Advance</span>
             </div>
-            {balanceDue > 0 && (
-              <div className="flex justify-between text-amber-700 font-extrabold text-xs bg-amber-50 p-2 rounded-xl border border-amber-200">
-                <span>Balance Due:</span>
-                <span>{formatPrice(balanceDue)}</span>
-              </div>
-            )}
           </div>
         </div>
 

@@ -178,7 +178,7 @@ export const packagesData = [
       'All Regional Train & Cable Car Access'
     ],
     itinerary: [
-      { day: 1, title: 'Arrival in Interlaken', desc: 'Scenic train from Zurich to Interlaken. Check in to mountain resort with Lake Thun view.' },
+      { day: 1, title: 'Arrival in Interlaken', desc: 'Scenic train and removefrom Zurich to Interlaken. Check in to mountain resort with Lake Thun view.' },
       { day: 2, title: 'Jungfraujoch Top of Europe', desc: 'Cogwheel train ride up to Europe’s highest railway station and Ice Palace walkthrough.' },
       { day: 3, title: 'Glacier Express to Zermatt', desc: 'Panoramic glass-roof train travel through deep gorges and snow-capped peaks.' },
       { day: 4, title: 'Matterhorn Alpine Hike', desc: 'Cable car ride to Matterhorn Glacier Paradise and traditional Swiss fondue night.' },
@@ -259,7 +259,7 @@ export const reviewsData = [
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
     rating: 5,
     date: '2 weeks ago',
-    comment: 'Perfect Travel made our honeymoon in Maldives absolutely magical! Every detail was handled seamlessly, from airport speedboats to private underwater dinners. Will book every trip with them!'
+    comment: 'Maxx Joy Tours made our honeymoon in Maldives absolutely magical! Every detail was handled seamlessly, from airport speedboats to private underwater dinners. Will book every trip with them!'
   },
   {
     id: 'rev-2',

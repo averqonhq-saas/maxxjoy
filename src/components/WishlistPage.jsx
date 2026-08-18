@@ -223,7 +223,7 @@ export const WishlistPage = ({ onBack, onBookNow, onDetail }) => {
                   {/* Footer Action */}
                   <div className="p-5 pt-0 border-t border-[#E2E8F0]/60 mt-auto flex items-center justify-between gap-3 pt-4">
                     <div>
-                      <span className="text-[10px] text-[#64748B] uppercase font-bold block">Current Price</span>
+                      <span className="text-[10px] text-[#64748B] uppercase font-bold block">Starting from</span>
                       <div className="flex items-baseline gap-1.5">
                         <span className="text-xl font-black text-[#1A1A1A]">{formatPrice(pkg.price)}</span>
                         {pkg.originalPrice && (
@@ -235,16 +235,16 @@ export const WishlistPage = ({ onBack, onBookNow, onDetail }) => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => onDetail?.(pkg)}
-                        className="p-2.5 rounded-xl border border-[#E2E8F0] text-[#1A1A1A] hover:bg-[#F5F9FC] text-xs font-bold transition-all"
+                        className="p-2.5 rounded-xl border border-[#E2E8F0] text-[#1A1A1A] hover:bg-[#F5F9FC] text-xs font-bold transition-all cursor-pointer"
                         title="View Details"
                       >
                         Details
                       </button>
                       <button
                         onClick={onBookNow}
-                        className="bg-[#FF7A00] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl hover:bg-[#e56e00] shadow-md shadow-[#FF7A00]/20 transition-all"
+                        className="bg-[#FF7A00] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl hover:bg-[#e56e00] shadow-md shadow-[#FF7A00]/20 transition-all cursor-pointer"
                       >
-                        Book Now
+                        Enquire / Book
                       </button>
                     </div>
                   </div>

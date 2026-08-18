@@ -222,7 +222,11 @@ export default function App() {
 
             {/* ── Booking Flow Page ── */}
             {page === 'booking' && (
-              <BookingPage onBack={() => goTo('home')} />
+              <BookingPage
+                onBack={() => goTo('home')}
+                onNavigateMyBookings={() => goTo('my-bookings')}
+                onExploreMore={() => goTo('explore-tours')}
+              />
             )}
 
             {/* ── Legal & Support Pages ── */}

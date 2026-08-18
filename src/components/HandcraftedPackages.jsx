@@ -247,7 +247,7 @@ export const HandcraftedPackages = ({ onBookNow }) => {
                     onClick={() => onBookNow?.(pkg)}
                     className="bg-[#FF7A00] text-white px-7 py-3 rounded-2xl font-extrabold text-sm hover:bg-[#e56e00] shadow-lg shadow-[#FF7A00]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
-                    Book Now
+                    Enquire / Book
                   </button>
                 </div>
               </div>

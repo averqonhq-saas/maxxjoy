@@ -270,14 +270,15 @@ export const DubaiTravelPage = ({ onBack, onBookNow }) => {
                 </div>
                 <div className="flex items-center justify-between mt-4">
                   <div>
+                    <span className="text-[10px] text-[#64748B] block font-bold uppercase">Starting from</span>
                     <span className="text-xl font-black text-[#1A1A1A]">${p.price.toLocaleString()}</span>
                     <span className="text-xs text-[#64748B] ml-1">/ person</span>
                   </div>
                   <button
                     onClick={onBookNow}
-                    className="bg-[#FF7A00] text-white text-xs font-extrabold px-4 py-2 rounded-xl hover:bg-[#e56e00] transition-all shadow-md shadow-[#FF7A00]/20"
+                    className="bg-[#FF7A00] text-white text-xs font-extrabold px-4 py-2 rounded-xl hover:bg-[#e56e00] transition-all shadow-md shadow-[#FF7A00]/20 cursor-pointer"
                   >
-                    Book Now
+                    Enquire / Book
                   </button>
                 </div>
               </div>

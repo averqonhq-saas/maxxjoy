@@ -18,11 +18,12 @@ import {
 
 const AppContext = createContext();
 
-// ── Initial Seed Data (2 Popular Destinations & 2 Handcrafted Packages) ──────
+// ── Authentic Tourism Destinations & Packages for Maxx Joy Tours ──────
 const SEED_DESTINATIONS = [
   {
     id: 'dest-dubai',
     title: 'Dubai, UAE',
+    country: 'United Arab Emirates',
     region: 'Middle East',
     category: 'leisure',
     image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
@@ -38,29 +39,118 @@ const SEED_DESTINATIONS = [
     description: 'Experience luxury shopping, ultramodern architecture, sand dune safaris, and a lively nightlife scene.',
     weather: '32°C Sunny',
     bestTime: 'Nov - Mar',
-    flightDuration: '7 hrs from London',
+    flightDuration: '4.5 hrs from India',
     highlights: ['Burj Khalifa Sky Deck', 'Desert Safari with BBQ', 'Marina Yacht Cruise', 'Gold Souk Tour']
+  },
+  {
+    id: 'dest-bali',
+    title: 'Bali, Indonesia',
+    country: 'Indonesia',
+    region: 'Asia',
+    category: 'honeymoon',
+    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Bali tropical rice fields and temples',
+    price: 999,
+    originalPrice: 1399,
+    rating: 4.9,
+    reviewsCount: 428,
+    popular: true,
+    featured: true,
+    status: 'Active',
+    displayOrder: 2,
+    description: 'Tropical paradise with private pool villas, sacred temples, emerald rice terraces, and coral beaches.',
+    weather: '28°C Tropical',
+    bestTime: 'Apr - Oct',
+    flightDuration: '6.5 hrs from India',
+    highlights: ['Ubud Jungle Swing', 'Nusa Penida Island Tour', 'Tanah Lot Sunset', 'Private Pool Villa Stay']
   },
   {
     id: 'dest-maldives',
     title: 'Maldives',
+    country: 'Maldives',
     region: 'Asia',
     category: 'honeymoon',
     image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80',
     alt: 'Maldives water villas over clear blue ocean',
-    price: 2499,
-    originalPrice: 2999,
+    price: 2199,
+    originalPrice: 2699,
     rating: 5.0,
     reviewsCount: 520,
     popular: true,
     featured: true,
     status: 'Active',
-    displayOrder: 2,
-    description: 'Tropical paradise with overwater white-sand villas, vibrant coral reefs, and world-class luxury wellness spas.',
+    displayOrder: 3,
+    description: 'Breathtaking overwater villas, vibrant coral reefs, and world-class luxury wellness spas.',
     weather: '29°C Tropical',
     bestTime: 'Nov - Apr',
-    flightDuration: '10 hrs from London',
+    flightDuration: '2.5 hrs from India',
     highlights: ['Overwater Bungalow Resort', 'Private Sunset Dolphin Cruise', 'Scuba Diving & Snorkeling']
+  },
+  {
+    id: 'dest-singapore',
+    title: 'Singapore City',
+    country: 'Singapore',
+    region: 'Asia',
+    category: 'family',
+    image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Singapore Marina Bay Sands and Supertrees',
+    price: 1150,
+    originalPrice: 1450,
+    rating: 4.8,
+    reviewsCount: 290,
+    popular: true,
+    featured: true,
+    status: 'Active',
+    displayOrder: 4,
+    description: 'Futuristic gardens, world-renowned theme parks, luxury shopping, and Michelin-star street food.',
+    weather: '30°C Warm',
+    bestTime: 'All Year',
+    flightDuration: '4 hrs from India',
+    highlights: ['Gardens by the Bay', 'Sentosa Island Cable Car', 'Universal Studios VIP', 'Night Safari']
+  },
+  {
+    id: 'dest-goa',
+    title: 'Goa Coastal Getaway',
+    country: 'India',
+    region: 'Asia',
+    category: 'leisure',
+    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Goa palm trees and golden beach sunset',
+    price: 499,
+    originalPrice: 699,
+    rating: 4.8,
+    reviewsCount: 380,
+    popular: true,
+    featured: true,
+    status: 'Active',
+    displayOrder: 5,
+    description: 'Golden sandy beaches, Portuguese heritage architecture, water sports, and seaside shack dinners.',
+    weather: '29°C Coastal',
+    bestTime: 'Oct - Apr',
+    flightDuration: '1.5 hrs Domestic',
+    highlights: ['Private Beach Resort', 'Dudhsagar Waterfalls Trek', 'Mandovi River Sunset Cruise', 'Old Goa Heritage Walk']
+  },
+  {
+    id: 'dest-switzerland',
+    title: 'Swiss Alps & Zurich',
+    country: 'Switzerland',
+    region: 'Europe',
+    category: 'adventure',
+    image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Swiss Alps snow-capped mountains and alpine chalet',
+    price: 2899,
+    originalPrice: 3499,
+    rating: 5.0,
+    reviewsCount: 215,
+    popular: false,
+    featured: true,
+    status: 'Active',
+    displayOrder: 6,
+    description: 'Snow-capped peaks, scenic panoramic glacier trains, crystal alpine lakes, and Swiss chocolate tastings.',
+    weather: '18°C Alpine',
+    bestTime: 'May - Oct / Dec - Mar',
+    flightDuration: '8.5 hrs from India',
+    highlights: ['Jungfraujoch Top of Europe', 'Glacier 3000 Cable Car', 'Lake Lucerne Boat Cruise', 'Matterhorn Village Zermatt']
   }
 ];
 
@@ -80,12 +170,17 @@ const SEED_PACKAGES = [
     reviewsCount: 128,
     discountBadge: 'Best Seller',
     image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
+    hotelName: 'Atlantis, The Palm 5★ Resort',
+    hotelImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
     status: 'Active',
     featured: true,
     showOnHomepage: true,
     displayOrder: 1,
+    baseFare: 1100,
+    hotelFare: 300,
+    vipFare: 99,
     highlights: ['5★ Atlantis The Palm Stay', 'Burj Khalifa 148th Floor Access', 'VIP Private Desert Safari', 'Luxury Marina Yacht Dinner'],
-    inclusions: ['5★ Atlantis The Palm Stay', 'Burj Khalifa 148th Floor Access', 'VIP Private Desert Safari', 'Luxury Marina Yacht Dinner']
+    inclusions: ['5★ Atlantis The Palm Stay', 'Burj Khalifa 148th Floor Access', 'VIP Private Desert Safari with BBQ', 'Luxury Marina Yacht Dinner Cruise', 'Private Airport Transfers']
   },
   {
     id: 'pkg-bali-tropical',
@@ -102,12 +197,125 @@ const SEED_PACKAGES = [
     reviewsCount: 95,
     discountBadge: 'Popular',
     image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
+    hotelName: 'Maya Ubud Luxury Resort & Spa',
+    hotelImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
     status: 'Active',
     featured: true,
     showOnHomepage: true,
     displayOrder: 2,
+    baseFare: 850,
+    hotelFare: 300,
+    vipFare: 99,
     highlights: ['Private Pool Villa in Ubud', 'Daily Sunrise Yoga & Spa', 'Nusa Penida Island Speedboat', 'Tanah Lot Sunset Tour'],
-    inclusions: ['Private Pool Villa in Ubud', 'Daily Sunrise Yoga & Spa', 'Nusa Penida Island Speedboat', 'Tanah Lot Sunset Tour']
+    inclusions: ['Private Pool Villa in Ubud', 'Daily Gourmet Breakfast & Spa Massage', 'Nusa Penida Island Private Speedboat Tour', 'Tanah Lot Temple Sunset Excursion', 'Airport Chauffeur Service']
+  },
+  {
+    id: 'pkg-maldives-honeymoon',
+    title: 'Maldives Overwater Pool Villa Romance',
+    destinationName: 'Maldives',
+    location: 'North Malé Atoll, Maldives',
+    region: 'Asia',
+    duration: '5 Days / 4 Nights',
+    durationDays: 5,
+    price: 2199,
+    originalPrice: 2699,
+    category: 'honeymoon',
+    rating: 5.0,
+    reviewsCount: 142,
+    discountBadge: 'VIP Luxury',
+    image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=1200&q=80',
+    hotelName: 'Soneva Jani Water Retreat Resort',
+    hotelImage: 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?auto=format&fit=crop&w=800&q=80',
+    status: 'Active',
+    featured: true,
+    showOnHomepage: true,
+    displayOrder: 3,
+    baseFare: 1600,
+    hotelFare: 450,
+    vipFare: 149,
+    highlights: ['Overwater Bungalow with Private Pool', 'Speedboat Airport Transfer', 'Coral Reef Snorkeling Tour', 'Private Candlelight Beach Dinner'],
+    inclusions: ['Overwater Bungalow with Private Slide & Pool', 'Roundtrip Airport Speedboat / Seaplane Transfer', 'Daily Floating Breakfast & All-Inclusive Dining', 'Guided Snorkeling with Sea Turtles', 'Sunset Dolphin Watching Cruise']
+  },
+  {
+    id: 'pkg-singapore-family',
+    title: 'Singapore Sentosa & Marina Bay Wonders',
+    destinationName: 'Singapore City',
+    location: 'Marina Bay & Sentosa, Singapore',
+    region: 'Asia',
+    duration: '5 Days / 4 Nights',
+    durationDays: 5,
+    price: 1150,
+    originalPrice: 1450,
+    category: 'family',
+    rating: 4.8,
+    reviewsCount: 88,
+    discountBadge: 'Family Special',
+    image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80',
+    hotelName: 'Marina Bay Sands 5★ Luxury Hotel',
+    hotelImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
+    status: 'Active',
+    featured: true,
+    showOnHomepage: true,
+    displayOrder: 4,
+    baseFare: 800,
+    hotelFare: 250,
+    vipFare: 100,
+    highlights: ['Marina Bay Sands Infinity Pool Access', 'Universal Studios Express Passes', 'Gardens by the Bay Cloud Forest', 'Night Safari Tram Tour'],
+    inclusions: ['4-Star/5-Star City Hotel Stay', 'Universal Studios Singapore Full Day Pass', 'Gardens by the Bay & Floral Fantasy Entry', 'Night Safari Tram Ride Tour', 'Private Airport Transfers']
+  },
+  {
+    id: 'pkg-goa-beach',
+    title: 'Goa Coastal Heritage & Beachfront Villa',
+    destinationName: 'Goa Coastal Getaway',
+    location: 'North & South Goa, India',
+    region: 'Asia',
+    duration: '4 Days / 3 Nights',
+    durationDays: 4,
+    price: 499,
+    originalPrice: 699,
+    category: 'leisure',
+    rating: 4.8,
+    reviewsCount: 160,
+    discountBadge: 'Top Value',
+    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80',
+    hotelName: 'Taj Exotica Resort & Spa Goa',
+    hotelImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
+    status: 'Active',
+    featured: true,
+    showOnHomepage: true,
+    displayOrder: 5,
+    baseFare: 350,
+    hotelFare: 120,
+    vipFare: 29,
+    highlights: ['Beachfront Luxury Villa Stay', 'Dudhsagar Waterfalls Jeep Trek', 'Private Mandovi River Yacht Sunset', 'Old Goa Portuguese Church Tour'],
+    inclusions: ['Luxury Beach Resort Stay', 'Daily Breakfast Buffet', 'Dudhsagar Waterfalls Day Trip', 'Private Mandovi River Sunset Boat Tour', 'Airport Pick & Drop in AC Sedan']
+  },
+  {
+    id: 'pkg-swiss-alps',
+    title: 'Swiss Alps & Jungfraujoch Glacier Tour',
+    destinationName: 'Swiss Alps & Zurich',
+    location: 'Interlaken & Lucerne, Switzerland',
+    region: 'Europe',
+    duration: '6 Days / 5 Nights',
+    durationDays: 6,
+    price: 2899,
+    originalPrice: 3499,
+    category: 'adventure',
+    rating: 5.0,
+    reviewsCount: 75,
+    discountBadge: 'Europe Special',
+    image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80',
+    hotelName: 'Victoria-Jungfrau Grand Hotel & Spa',
+    hotelImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+    status: 'Active',
+    featured: true,
+    showOnHomepage: true,
+    displayOrder: 6,
+    baseFare: 2100,
+    hotelFare: 600,
+    vipFare: 199,
+    highlights: ['Jungfraujoch Top of Europe Train Pass', 'Glacier Express Scenic Train Journey', 'Mount Titlis Rotating Cable Car', 'Lake Lucerne Steamboat Cruise'],
+    inclusions: ['4-Star Mountain Chalet Hotel Stay', 'Swiss Travel Pass (Unlimited Trains & Boats)', 'Jungfraujoch High Altitude Railway Ticket', 'Mount Titlis Cable Car & Cliff Walk', 'Swiss Fondue Dinner Experience']
   }
 ];
 
@@ -419,44 +627,64 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // ── Initial Booking Requests (Clean Slate: 0 Dummy Data) ──────────────────
+  const SEED_BOOKINGS = [];
+
   // ── Firebase Firestore Bookings Sync ──────────────────────────────────────
   const [myBookings, setMyBookings] = useState(() => {
     try {
       const saved = localStorage.getItem('pt_bookings');
-      return saved ? JSON.parse(saved) : [];
+      if (saved && JSON.parse(saved).length > 0) return JSON.parse(saved);
     } catch {
       return [];
     }
+    return [];
   });
 
   useEffect(() => {
     localStorage.setItem('pt_bookings', JSON.stringify(myBookings));
   }, [myBookings]);
 
-  // Sync Bookings from Firebase Firestore
+  // Sync Bookings from Firebase Firestore global_bookings & user bookings
   useEffect(() => {
-    if (!user?.uid) return;
-    const q = query(
-      collection(db, 'users', user.uid, 'bookings'),
-      orderBy('bookingDate', 'desc')
+    const qGlobal = query(
+      collection(db, 'global_bookings'),
+      orderBy('createdAt', 'desc')
     );
-    const unsub = onSnapshot(q, (snap) => {
-      const bookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setMyBookings(bookings);
+    const unsubGlobal = onSnapshot(qGlobal, (snap) => {
+      if (!snap.empty) {
+        const bookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setMyBookings(bookings);
+        localStorage.setItem('pt_bookings', JSON.stringify(bookings));
+      } else {
+        setMyBookings([]);
+        localStorage.setItem('pt_bookings', JSON.stringify([]));
+      }
     }, () => {});
-    return () => unsub();
-  }, [user?.uid]);
+
+    return () => unsubGlobal();
+  }, []);
 
   const addBooking = async (bookingData) => {
-    const bookingId = `TRV${Math.floor(10000 + Math.random() * 90000)}`;
+    const randomNum = Math.floor(10000 + Math.random() * 90000);
+    const bookingId = bookingData.bookingId || `TRV-${randomNum}`;
     const newBooking = {
       bookingId,
       bookingDate: new Date().toISOString().split('T')[0],
-      status: 'Confirmed',
+      createdAt: new Date().toISOString(),
+      status: 'Request Submitted',
+      hotelPreference: '4 Star',
+      transportRequired: {
+        airportPickup: true,
+        localTransportation: true
+      },
+      contactPreference: 'WhatsApp',
+      additionalRequirements: '',
+      adminNotes: '',
       ...bookingData
     };
 
-    setMyBookings(prev => [newBooking, ...prev]);
+    setMyBookings(prev => [newBooking, ...prev.filter(b => b.bookingId !== bookingId)]);
 
     // Save to Firebase Firestore under user's bookings & global bookings
     try {
@@ -472,14 +700,65 @@ export const AppProvider = ({ children }) => {
         userEmail: user?.email || newBooking.guestEmail || 'guest@example.com',
         createdAt: serverTimestamp()
       });
-      showToast('🎉 Booking Confirmed & Saved in Firebase!', 'success');
+      showToast(`🎉 Booking Request ${bookingId} Submitted & Saved to Firebase!`, 'success');
     } catch (e) {
-      showToast('🎉 Booking Confirmed!', 'success');
+      showToast(`🎉 Booking Request ${bookingId} Submitted!`, 'success');
     }
 
     try {
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
     } catch (e) {}
+
+    return newBooking;
+  };
+
+  const updateBooking = async (bookingIdOrDocId, updatedFields) => {
+    setMyBookings(prev => prev.map(b => (b.bookingId === bookingIdOrDocId || b.id === bookingIdOrDocId) ? { ...b, ...updatedFields } : b));
+    
+    try {
+      if (bookingIdOrDocId) {
+        // If it's a firestore doc ID
+        await setDoc(doc(db, 'global_bookings', bookingIdOrDocId), updatedFields, { merge: true });
+      }
+      showToast('Booking request updated', 'success');
+    } catch (e) {
+      showToast('Booking request updated locally', 'info');
+    }
+  };
+
+  const deleteBooking = async (bookingIdOrDocId) => {
+    setMyBookings(prev => prev.filter(b => b.bookingId !== bookingIdOrDocId && b.id !== bookingIdOrDocId));
+    try {
+      if (bookingIdOrDocId) {
+        await deleteDoc(doc(db, 'global_bookings', bookingIdOrDocId));
+      }
+      showToast('Booking request removed', 'info');
+    } catch {
+      showToast('Booking request removed', 'info');
+    }
+  };
+
+  const clearAllDataAndStartFresh = async () => {
+    try {
+      const currentList = [...myBookings];
+      setMyBookings([]);
+      localStorage.removeItem('pt_bookings');
+      localStorage.removeItem('pt_inquiries');
+      
+      for (const b of currentList) {
+        const idToDelete = b.id || b.bookingId;
+        if (idToDelete) {
+          try {
+            await deleteDoc(doc(db, 'global_bookings', idToDelete));
+          } catch {}
+        }
+      }
+      showToast('🧹 All booking inquiries removed! Started completely fresh.', 'success');
+    } catch {
+      setMyBookings([]);
+      localStorage.removeItem('pt_bookings');
+      showToast('🧹 Fresh clean slate started.', 'info');
+    }
   };
 
   // ── Payment Settings Sync (Firebase Firestore) ────────────────────────────
@@ -806,7 +1085,7 @@ export const AppProvider = ({ children }) => {
         currency, changeCurrency, formatPrice,
         user, authLoading, logoutUser, isAdmin: user?.isAdmin || user?.email?.toLowerCase() === 'muneeswaranmd2004@gmail.com',
         wishlist, toggleWishlist,
-        myBookings, addBooking,
+        myBookings, addBooking, updateBooking, deleteBooking, clearAllDataAndStartFresh,
         // Admin Controlled Content (Firebase Synced)
         destinationsList, setDestinationsList, addDestination, updateDestination, deleteDestination,
         packagesList, setPackagesList, addPackage, updatePackage, deletePackage,

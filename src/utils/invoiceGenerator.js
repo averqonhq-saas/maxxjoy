@@ -4,7 +4,7 @@
 
 export const generateAndDownloadInvoice = (booking, legalSettings = {}) => {
   const bookingId = booking.bookingId || `TRV${Math.floor(10000 + Math.random() * 90000)}`;
-  const invoiceNum = `INV-${bookingId.replace('TRV', '')}-${new Date().getFullYear()}`;
+  const invoiceNum = `INV-${bookingId.replace('TRV-', '').replace('TRV', '')}-${new Date().getFullYear()}`;
   const issueDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const isPlaceholder = (str) => !str || str.includes('Perfect Travel') || str.includes('123 Adventure') || str.includes('555') || str.includes('perfecttravel');
@@ -21,16 +21,26 @@ export const generateAndDownloadInvoice = (booking, legalSettings = {}) => {
   
   const tourTitle = booking.packageTitle || booking.title || 'Custom Luxury Tour Package';
   const travelDate = booking.travelDate || booking.date || 'Upcoming Travel';
-  const travelers = booking.travelers || '2 Adults';
   const duration = booking.duration || '5 Days / 4 Nights';
 
-  const totalAmount = typeof booking.totalAmount === 'number' ? booking.totalAmount : (parseFloat(booking.totalAmount) || parseFloat(booking.price) || 1499);
-  const paidAmount = typeof booking.amountPaid === 'number' ? booking.amountPaid : (parseFloat(booking.amountPaid) || parseFloat(booking.totalPaid) || totalAmount);
-  const balanceDue = typeof booking.balanceDue === 'number' ? booking.balanceDue : (parseFloat(booking.balanceDue) || (totalAmount - paidAmount));
-  const currencySymbol = booking.currencySymbol || '₹';
+  const adults = parseInt(booking.adults) || 2;
+  const children = parseInt(booking.children) || 0;
+  const travelers = booking.travelers || `${adults} Adults${children > 0 ? `, ${children} Children` : ''}`;
+
+  const totalAmount = typeof booking.estimatedCost === 'number' && booking.estimatedCost > 0
+    ? booking.estimatedCost
+    : (typeof booking.totalAmount === 'number' && booking.totalAmount > 0
+      ? booking.totalAmount
+      : (parseFloat(booking.estimatedCost) || parseFloat(booking.totalAmount) || ((parseFloat(booking.price || booking.basePrice) || 1499) * adults)));
+
+  const perAdultPrice = booking.price ? parseFloat(booking.price) : Math.round(totalAmount / (adults + children * 0.6));
+  const perChildPrice = Math.round(perAdultPrice * 0.6);
+  const totalAdultFare = perAdultPrice * adults;
+  const totalChildFare = perChildPrice * children;
 
   const basePrice = Math.round(totalAmount * 0.95);
-  const gstAmount = Math.round(totalAmount * 0.05);
+  const gstAmount = totalAmount - basePrice;
+  const currencySymbol = booking.currencySymbol || '₹';
 
   const invoiceHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -54,7 +64,7 @@ export const generateAndDownloadInvoice = (booking, legalSettings = {}) => {
     .brand-sub { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1px; }
     
     .invoice-badge { text-align: right; }
-    .invoice-title { font-size: 28px; font-weight: 900; color: #0F172A; text-transform: uppercase; letter-spacing: 1px; }
+    .invoice-title { font-size: 24px; font-weight: 900; color: #0F172A; text-transform: uppercase; letter-spacing: 1px; }
     .invoice-num { font-size: 13px; font-weight: 700; color: #0A4D8C; margin-top: 4px; font-family: monospace; }
     .status-tag { display: inline-block; padding: 4px 12px; background: #DCFCE7; color: #15803D; font-size: 11px; font-weight: 800; border-radius: 20px; margin-top: 8px; text-transform: uppercase; border: 1px solid #BBF7D0; }
     
@@ -69,11 +79,10 @@ export const generateAndDownloadInvoice = (booking, legalSettings = {}) => {
     td { padding: 18px 20px; font-size: 13px; font-weight: 600; border-bottom: 1px solid #F1F5F9; color: #334155; }
     tr:last-child td { border-bottom: none; }
     
-    .totals { margin-left: auto; width: 320px; margin-top: 24px; }
+    .totals { margin-left: auto; width: 340px; margin-top: 24px; }
     .totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; font-weight: 600; color: #64748B; }
     .totals-row.grand { font-size: 18px; font-weight: 900; color: #0F172A; border-top: 2px solid #0F172A; padding-top: 14px; margin-top: 8px; }
     .totals-row.paid { color: #16A34A; font-weight: 800; }
-    .totals-row.due { color: #D97706; font-weight: 800; }
     
     .footer-note { margin-top: 48px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center; }
     .footer-note p { font-size: 12px; font-weight: 600; color: #64748B; }
@@ -95,57 +104,59 @@ export const generateAndDownloadInvoice = (booking, legalSettings = {}) => {
 </head>
 <body>
 
-  <div className="invoice-card">
+  <div class="invoice-card">
     <!-- Header -->
-    <div className="header">
-      <div className="brand">
-        <div className="brand-logo">M</div>
+    <div class="header">
+      <div class="brand">
+        <div class="brand-logo">M</div>
         <div>
-          <div className="brand-name">Maxx <span>Joy</span></div>
-          <div className="brand-sub">Tours & Travel Pvt Ltd</div>
+          <div class="brand-name">Maxx <span>Joy</span></div>
+          <div class="brand-sub">Tours & Travel Pvt Ltd</div>
         </div>
       </div>
 
-      <div className="invoice-badge">
-        <div className="invoice-title">Tax Invoice</div>
-        <div className="invoice-num">${invoiceNum}</div>
-        <div className="status-tag">Payment Verified ✓</div>
+      <div class="invoice-badge">
+        <div class="invoice-title">Booking Quotation & Invoice</div>
+        <div class="invoice-num">${invoiceNum}</div>
+        <div class="status-tag" style="background: #DCFCE7; color: #15803D; border-color: #BBF7D0;">${booking.status || 'Confirmed Quote'}</div>
       </div>
     </div>
 
     <!-- Details Grid -->
-    <div className="info-grid">
-      <div className="info-box">
+    <div class="info-grid">
+      <div class="info-box">
         <h4>Issued By</h4>
         <p>
           <strong>${companyName}</strong><br>
-          ${companyAddress.replace('\n', '<br>')}<br>
+          ${companyAddress.replace(/\n/g, '<br>')}<br>
           <strong>Phone:</strong> ${companyPhone}<br>
           <strong>Email:</strong> ${companyEmail}<br>
           <strong>GSTIN:</strong> 33AAACM9804F1Z0
         </p>
       </div>
 
-      <div className="info-box">
-        <h4>Billed To (Traveler)</h4>
+      <div class="info-box">
+        <h4>Traveler & Requirements</h4>
         <p>
-          <strong>${guestName}</strong><br>
+          <strong>Lead Guest:</strong> ${guestName}<br>
           <strong>Email:</strong> ${guestEmail}<br>
-          <strong>Mobile:</strong> ${guestPhone}<br>
-          <strong>Booking Ref:</strong> ${bookingId}<br>
-          <strong>Invoice Date:</strong> ${issueDate}
+          <strong>Mobile / WhatsApp:</strong> ${guestPhone}<br>
+          <strong>Hotel Preference:</strong> ${booking.hotelPreference || '4 Star Accommodation'}<br>
+          <strong>Transport:</strong> ${[booking.transportRequired?.airportPickup && 'Airport Pickup', booking.transportRequired?.localTransportation && 'Local Transportation'].filter(Boolean).join(', ') || 'Standard'}<br>
+          <strong>Booking Ref:</strong> #${bookingId}<br>
+          <strong>Travel Date:</strong> ${travelDate}
         </p>
       </div>
     </div>
 
     <!-- Booking Summary Table -->
-    <div className="table-container">
+    <div class="table-container">
       <table>
         <thead>
           <tr>
             <th>Description & Package</th>
             <th>Travel Details</th>
-            <th>Qty</th>
+            <th>Travellers / Qty</th>
             <th style="text-align: right;">Amount</th>
           </tr>
         </thead>
@@ -153,139 +164,131 @@ export const generateAndDownloadInvoice = (booking, legalSettings = {}) => {
           <tr>
             <td>
               <strong>${tourTitle}</strong><br>
-              <span style="font-size: 11px; color: #64748B;">Luxury Hotel Stay, Private Transfers, Sightseeing & Concierge Support</span>
+              <span style="font-size: 11px; color: #64748B;">Hotel: ${booking.hotelPreference || '4 Star'} Class • Guided Tours & Transfers</span>
             </td>
             <td>
               <strong>Date:</strong> ${travelDate}<br>
-              <span style="font-size: 11px; color: #64748B;">${duration} • ${travelers}</span>
+              <span style="font-size: 11px; color: #64748B;">${duration}</span>
             </td>
-            <td>1 Package</td>
-            <td style="text-align: right; font-weight: 800;">${currencySymbol}${basePrice.toLocaleString()}</td>
+            <td>${adults} Adult(s)</td>
+            <td style="text-align: right; font-weight: 800;">${currencySymbol}${totalAdultFare.toLocaleString()}</td>
           </tr>
+          ${children > 0 ? `
           <tr>
             <td>
-              <strong>Taxes & Service Charges</strong><br>
-              <span style="font-size: 11px; color: #64748B;">Includes 5% Govt Tourism Tax & GST</span>
+              <strong>Child Fare (Special Rate)</strong><br>
+              <span style="font-size: 11px; color: #64748B;">Extra Bed, Meals & Child Excursions</span>
             </td>
-            <td>Tax Code: GST-5%</td>
-            <td>1</td>
-            <td style="text-align: right; font-weight: 800;">${currencySymbol}${gstAmount.toLocaleString()}</td>
+            <td>Child Rate</td>
+            <td>${children} Child</td>
+            <td style="text-align: right; font-weight: 800;">${currencySymbol}${totalChildFare.toLocaleString()}</td>
+          </tr>
+          ` : ''}
+          <tr>
+            <td>
+              <strong>Inclusions & Logistics</strong><br>
+              <span style="font-size: 11px; color: #64748B;">Transfers, Guided Itineraries & Concierge Desk</span>
+            </td>
+            <td>All Logistics</td>
+            <td>Included</td>
+            <td style="text-align: right; font-weight: 800; color: #16A34A;">Included</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Totals -->
-    <div className="totals">
-      <div className="totals-row">
-        <span>Subtotal:</span>
+    <div class="totals">
+      <div class="totals-row">
+        <span>Base Package Fare (95%):</span>
         <span>${currencySymbol}${basePrice.toLocaleString()}</span>
       </div>
-      <div className="totals-row">
+      <div class="totals-row">
         <span>GST & Taxes (5%):</span>
         <span>${currencySymbol}${gstAmount.toLocaleString()}</span>
       </div>
-      <div className="totals-row grand">
-        <span>Total Amount:</span>
+      <div class="totals-row grand">
+        <span>Confirmed / Estimated Total:</span>
         <span>${currencySymbol}${totalAmount.toLocaleString()}</span>
       </div>
-      <div className="totals-row paid">
-        <span>Amount Received:</span>
-        <span>${currencySymbol}${paidAmount.toLocaleString()} ✓</span>
+      <div class="totals-row" style="color: #0A4D8C; font-weight: 800;">
+        <span>Payment Condition:</span>
+        <span>Enquiry Based (No Online Advance)</span>
       </div>
-      ${balanceDue > 0 ? `
-      <div className="totals-row due">
-        <span>Balance Due:</span>
-        <span>${currencySymbol}${balanceDue.toLocaleString()}</span>
-      </div>
-      ` : ''}
     </div>
 
     <!-- Footer Note -->
-    <div className="footer-note">
-      <p>Thank you for choosing <strong>Maxx Joy Tours and Travel Pvt Ltd</strong> for your journey!</p>
-      <p style="margin-top: 4px; font-size: 11px; color: #94A3B8;">For any modifications or travel support, contact us 24/7 at ${companyEmail} or call ${companyPhone}.</p>
-      <div className="seal">
-        ✓ Official Computer Generated Tax Invoice • Maxx Joy Signature Stamp
+    <div class="footer-note">
+      <p>Thank you for choosing <strong>Maxx Joy Tours and Travel Pvt Ltd</strong>. We are committed to making your journey unforgettable!</p>
+      <div class="seal">
+        <span>✓ Verified Computer Generated Tax Invoice • Maxx Joy Official Signature Stamp</span>
       </div>
     </div>
 
-    <!-- Action Buttons for Preview -->
-    <div className="actions">
-      <button onclick="window.print()" className="btn btn-primary">🖨️ Print / Save as PDF</button>
-      <button onclick="window.close()" className="btn btn-secondary">Close</button>
+    <!-- Screen Buttons -->
+    <div class="actions">
+      <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+      <button class="btn btn-secondary" onclick="window.close()">Close Window</button>
     </div>
   </div>
 
 </body>
 </html>`;
 
-  // 1. Open Printable Window
+  // Open the printable HTML in a new tab or trigger a print
   const printWindow = window.open('', '_blank');
   if (printWindow) {
+    printWindow.document.open();
     printWindow.document.write(invoiceHtml);
     printWindow.document.close();
-    printWindow.focus();
     setTimeout(() => {
       try {
         printWindow.print();
-      } catch (e) {}
+      } catch {}
     }, 500);
   }
-
-  // 2. Also trigger file download as HTML file
-  const blob = new Blob([invoiceHtml], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `MaxxJoy_Invoice_${bookingId}.html`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 };
 
-export const generateAndDownloadItinerary = (booking, legalSettings = {}) => {
+export const generateAndDownloadItinerary = (booking) => {
   const bookingId = booking.bookingId || `TRV${Math.floor(10000 + Math.random() * 90000)}`;
-  const tourTitle = booking.packageTitle || booking.title || 'Custom Luxury Tour Package';
-  const travelDate = booking.travelDate || booking.date || 'Upcoming Travel';
-  const travelers = booking.travelers || '2 Adults';
-  const duration = booking.duration || '5 Days / 4 Nights';
-
+  const tourTitle = booking.packageTitle || 'Custom Tour Package';
+  const travelDate = booking.travelDate || 'Selected Travel Date';
+  
   const itineraryText = `=====================================================
-MAXX JOY TOURS & TRAVEL PVT LTD — OFFICIAL TRAVEL ITINERARY
+MAXX JOY TOURS AND TRAVEL PVT LTD - OFFICIAL ITINERARY
 =====================================================
-Booking Reference: ${bookingId}
-Package Title: ${tourTitle}
-Travel Date: ${travelDate}
-Duration: ${duration}
-Travelers: ${travelers}
+Booking Reference : #${bookingId}
+Tour Package      : ${tourTitle}
+Lead Traveler     : ${booking.guestName || 'Traveler'}
+Travel Date       : ${travelDate}
+Total Travelers   : ${booking.travelers || '2 Adults'}
+Hotel Preference  : ${booking.hotelPreference || '4 Star Accommodation'}
+Status            : ${booking.status || 'Confirmed'}
 
-HEAD OFFICE CONTACT:
-Maxx Joy Tours and Travel Pvt Ltd
-Address: NO 6 new annai indra nagar maruthamalai, Coimbatore 641046
-Phone: +91 9804777879 / +91 7418407088
-Emails: Info@maxxjoytours.com | Yogaprathap@maxxjoytours.com | George@maxxjoytours.com
+=====================================================
+TOUR SCHEDULE & ITINERARY HIGHLIGHTS:
+=====================================================
+Day 1: Arrival, VIP Airport Meet & Greet, Private Transfer to Hotel Check-in
+Day 2: Morning City Highlights Tour & Afternoon Leisure
+Day 3: Signature Excursion & Sunset Sightseeing Experience
+Day 4: Guided Cultural & Adventure Tours with Traditional Lunch
+Day 5: Hotel Check-out, Souvenir Shopping & Airport Departure Transfer
 
-DAY-BY-DAY ITINERARY:
-- Day 1: Arrival & Airport Chauffeur Transfer -> Check-in at 5-Star Resort
-- Day 2: Guided City Excursion & Sightseeing Tour
-- Day 3: Signature Adventure & Evening Sunset Dinner Cruise
-- Day 4: Wellness Spa Morning & Local Artisan Shopping
-- Day 5: Breakfast & Private Chauffeur Airport Drop-off
+=====================================================
+CUSTOMER SUPPORT & CONCIERGE:
+=====================================================
+Phone / WhatsApp : +91 98047 77879 / +91 74184 07088
+Official Email   : Info@maxxjoytours.com
+Registered Office: NO 6 new annai indra nagar maruthamalai, Coimbatore 641046
 
-IMPORTANT TRAVEL ADVISORY:
-• Please present a copy of this itinerary and your Govt ID/Passport at check-in.
-• Concierge Support is available 24/7 at +91 9804777879.
-
-Thank you for traveling with Maxx Joy Tours & Travel Pvt Ltd!
-=====================================================`;
+Thank you for traveling with Maxx Joy Tours!
+`;
 
   const blob = new Blob([itineraryText], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `MaxxJoy_Itinerary_${bookingId}.txt`;
+  link.download = `Itinerary_${bookingId}_MaxxJoy.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

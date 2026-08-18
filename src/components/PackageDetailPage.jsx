@@ -221,8 +221,9 @@ export const PackageDetailPage = ({ onBack, onBookNow, pkgData }) => {
             {/* Price Breakdown Card */}
             <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 space-y-5 shadow-md">
               <div>
-                <span className="text-[10px] font-extrabold uppercase text-[#64748B] tracking-wider block">Price Breakdown</span>
-                <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-[10px] font-extrabold uppercase text-[#FF7A00] tracking-wider block">Estimated Price</span>
+                <div className="flex items-baseline gap-1.5 mt-1">
+                  <span className="text-xs font-bold text-[#64748B]">Starting from</span>
                   <span className="text-3xl font-black text-[#1A1A1A]">{formatPrice(pkg.price)}</span>
                   <span className="text-xs text-[#64748B]">/ person</span>
                 </div>
@@ -230,7 +231,7 @@ export const PackageDetailPage = ({ onBack, onBookNow, pkgData }) => {
 
               <div className="space-y-2 text-xs text-[#64748B] pt-3 border-t border-[#E2E8F0]">
                 <div className="flex justify-between">
-                  <span>Base Fare (5 Days)</span>
+                  <span>Base Package Fare ({pkg.duration})</span>
                   <span className="font-bold text-[#1A1A1A]">{formatPrice(pkg.baseFare || 3850)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -238,12 +239,12 @@ export const PackageDetailPage = ({ onBack, onBookNow, pkgData }) => {
                   <span className="font-bold text-[#1A1A1A]">{formatPrice(pkg.hotelFare || 850)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Activity & VIP Fees</span>
+                  <span>Activity & Guided Fees</span>
                   <span className="font-bold text-[#1A1A1A]">{formatPrice(pkg.vipFare || 299)}</span>
                 </div>
                 <div className="flex justify-between font-black text-base text-[#1A1A1A] pt-3 border-t border-[#E2E8F0]">
-                  <span>Total Price</span>
-                  <span>{formatPrice(pkg.price)}</span>
+                  <span>Starting From</span>
+                  <span className="text-xl text-[#0A4D8C]">{formatPrice(pkg.price)}</span>
                 </div>
               </div>
 
@@ -251,24 +252,40 @@ export const PackageDetailPage = ({ onBack, onBookNow, pkgData }) => {
               <div className="bg-[#F5F9FC] border border-[#E2E8F0] rounded-2xl p-3 space-y-2">
                 <div className="flex items-center gap-2 text-[11px]">
                   <span className="material-symbols-outlined text-[#1A1A1A]" style={{ fontSize: 16 }}>hotel</span>
-                  <span className="font-bold text-[#64748B] uppercase text-[10px]">MAIN HOTEL</span>
+                  <span className="font-bold text-[#64748B] uppercase text-[10px]">FEATURED STAY</span>
                   <span className="font-extrabold text-[#1A1A1A]">{pkg.hotelName}</span>
                 </div>
                 <img src={pkg.hotelImage} alt={pkg.hotelName} className="w-full h-28 object-cover rounded-xl border border-[#E2E8F0]" />
               </div>
 
-              {/* CTA Button */}
-              <button
-                onClick={handleBookNowClick}
-                className="w-full bg-[#FF7A00] text-white font-black text-sm py-4 rounded-2xl hover:bg-[#e56e00] shadow-lg shadow-[#FF7A00]/25 transition-all text-center cursor-pointer"
-              >
-                Book This Tour
-              </button>
+              {/* Action Buttons: Enquire Now & Book This Trip */}
+              <div className="space-y-2.5">
+                <button
+                  onClick={handleBookNowClick}
+                  className="w-full bg-[#FF7A00] text-white font-black text-sm py-4 rounded-2xl hover:bg-[#e56e00] shadow-lg shadow-[#FF7A00]/25 transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-lg">calendar_month</span>
+                  <span>Book This Trip (No Payment Today)</span>
+                </button>
 
-              <p className="text-[11px] text-center text-[#64748B] flex items-center justify-center gap-1 font-medium">
-                <span className="material-symbols-outlined text-xs text-emerald-600">lock</span>
-                Secure payment & Free cancellation (48h)
-              </p>
+                <button
+                  onClick={handleBookNowClick}
+                  className="w-full bg-[#1A1A1A] text-white font-extrabold text-xs py-3 rounded-xl hover:bg-[#333] transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">chat_bubble</span>
+                  <span>Enquire / Request Quote</span>
+                </button>
+              </div>
+
+              <div className="bg-emerald-50 border border-emerald-200/80 rounded-2xl p-3 text-[11px] text-emerald-900 space-y-1">
+                <div className="flex items-center gap-1 font-extrabold text-emerald-800">
+                  <span className="material-symbols-outlined text-xs">verified</span>
+                  <span>100% Enquiry-Based Booking</span>
+                </div>
+                <p className="text-emerald-700 leading-snug">
+                  No payment collected today. Our travel specialists will confirm dates, hotel tier, private transfers, and final quote.
+                </p>
+              </div>
             </div>
 
             {/* Need Assistance Card */}

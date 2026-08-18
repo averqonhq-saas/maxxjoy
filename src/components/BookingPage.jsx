@@ -1,1102 +1,760 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { generateAndDownloadInvoice, generateAndDownloadItinerary } from '../utils/invoiceGenerator';
+import { generateAndDownloadItinerary, generateAndDownloadInvoice } from '../utils/invoiceGenerator';
 import { InvoiceModal } from './modals/InvoiceModal';
 
-const STEPS = [
-  { key: 'details',  label: 'Details',  icon: 'person' },
-  { key: 'package',  label: 'Package',  icon: 'inventory_2' },
-  { key: 'extras',   label: 'Extras',   icon: 'add_circle' },
-  { key: 'payment',  label: 'Payment',  icon: 'payments' },
-  { key: 'confirm',  label: 'Confirm',  icon: 'check_circle' },
-];
-
-const PACKAGES = [
-  {
-    id: 'deluxe',
-    name: 'Deluxe Suite',
-    desc: 'City view · King bed · Breakfast included',
-    price: 1250,
-    badge: null,
-    features: ['Ocean Terrace Access', 'Complimentary Minibar', 'Daily Housekeeping'],
-  },
-  {
-    id: 'premium',
-    name: 'Overwater Villa',
-    desc: 'Private pool · Butler service · All-inclusive',
-    price: 1890,
-    badge: 'Popular',
-    features: ['Private Pool', '24/7 Butler Service', 'All-Inclusive Dining & Spa'],
-  },
-  {
-    id: 'penthouse',
-    name: 'Penthouse Suite',
-    desc: 'Panoramiv view · Helicopter transfer',
-    price: 3200,
-    badge: 'Luxury',
-    features: ['Private Helicopter Transfer', 'Private Chef Experience', 'VIP Airport Lounge'],
-  },
-];
-
-const EXTRAS = [
-  { id: 'transfer', label: 'Airport Transfer', price: 120, icon: 'airport_shuttle', desc: 'Private luxury car from DXB' },
-  { id: 'spa', label: 'Spa Package', price: 350, icon: 'spa', desc: 'Full-day wellness retreat for 2' },
-  { id: 'desert', label: 'Desert Safari', price: 280, icon: 'terrain', desc: 'Sunset dune bashing + BBQ dinner' },
-  { id: 'cruise', label: 'Dhow Cruise', price: 180, icon: 'directions_boat', desc: 'Creek cruise with dinner & entertainment' },
-];
-
-const CALENDAR_DAYS = [
-  { day: 28, disabled: true }, { day: 29, disabled: true }, { day: 30, disabled: true },
-  { day: 1 },  { day: 2 },  { day: 3 },  { day: 4 },
-  { day: 5 },  { day: 6 },  { day: 7 },  { day: 8, today: true },
-  { day: 9 },  { day: 10 }, { day: 11 }, { day: 12 },
-  { day: 13 }, { day: 14 }, { day: 15 }, { day: 16 },
-  { day: 17 }, { day: 18 }, { day: 19 }, { day: 20 },
-  { day: 21 }, { day: 22 }, { day: 23 }, { day: 24 },
-  { day: 25 }, { day: 26 }, { day: 27 }, { day: 28 },
-  { day: 29 }, { day: 30 }, { day: 31 },
-];
-
-const DAY_HEADERS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-
-function SectionHeader({ num, title }) {
-  return (
-    <div className="flex items-center gap-3 mb-5">
-      <span className="size-8 rounded-full bg-white border-2 border-[#E2E8F0] text-[#1A1A1A] text-sm font-extrabold flex items-center justify-center flex-shrink-0 shadow-sm">
-        {num}
-      </span>
-      <h2 className="text-2xl font-black text-[#1A1A1A]">{title}</h2>
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-sm font-semibold text-[#1A1A1A]">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function SummaryRow({ icon, label, value }) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 18, marginTop: 1 }}>{icon}</span>
-      <div>
-        <p className="font-semibold text-[#1A1A1A]">{label}</p>
-        <p className="text-[#64748B] text-xs">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function Row({ label, value, bold }) {
-  return (
-    <div className="flex justify-between text-sm">
-      <span className="text-[#64748B]">{label}</span>
-      <span className={bold ? 'font-black text-[#1A1A1A]' : 'text-[#1A1A1A] font-medium'}>{value}</span>
-    </div>
-  );
-}
-
-export const BookingPage = ({ onBack, onMyBookings }) => {
-  const { addBooking, formatPrice, showToast, applyPromoCode, selectedPackageForBooking, paymentSettings, bookingPackageTiers, bookingAddonExtras } = useApp();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedDate, setSelectedDate] = useState(5);
-  const [selectedPackage, setSelectedPackage] = useState('deluxe');
-  const [selectedExtras, setSelectedExtras] = useState([]);
-  const [promo, setPromo] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', travelers: '2' });
-  const [payForm, setPayForm] = useState({ card: '', expiry: '', cvv: '', holder: '' });
-  const [advanceOption, setAdvanceOption] = useState('25'); // 'full' | '25' | '50'
-  const [paymentGatewayMethod, setPaymentGatewayMethod] = useState('razorpay'); // 'razorpay' | 'card' | 'pay_online'
-  const [upiId, setUpiId] = useState('');
-  const [onlineTxnRef, setOnlineTxnRef] = useState('');
-
-  const packagesToRender = (bookingPackageTiers && bookingPackageTiers.length > 0) ? bookingPackageTiers : PACKAGES;
-  const extrasToRender = (bookingAddonExtras && bookingAddonExtras.length > 0) ? bookingAddonExtras : EXTRAS;
+export const BookingPage = ({ onBack, onNavigateMyBookings, onExploreMore }) => {
+  const {
+    addBooking,
+    formatPrice,
+    showToast,
+    selectedPackageForBooking,
+    legalSettings,
+    user
+  } = useApp();
 
   const activeTour = selectedPackageForBooking || {
+    id: 'pkg-dubai-luxury',
     title: 'Dubai Premium Luxury Escape',
-    location: 'Dubai, UAE',
+    destinationName: 'Dubai, UAE',
+    location: 'Dubai, United Arab Emirates',
     price: 1499,
+    originalPrice: 1899,
     image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1400&q=85',
-    duration: '5 Days'
+    duration: '5 Days / 4 Nights',
+    inclusions: ['5★ Atlantis The Palm Stay', 'Burj Khalifa 148th Floor Access', 'VIP Private Desert Safari', 'Luxury Marina Yacht Dinner']
   };
 
-  const totalSteps = STEPS.length;
-  const progress = Math.round((currentStep / totalSteps) * 100);
+  // Form States
+  const [travelDate, setTravelDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 24);
+    return d.toISOString().split('T')[0];
+  });
 
-  const pkg = packagesToRender.find(p => p.id === selectedPackage) || packagesToRender[0];
-  const basePrice = activeTour.price || (pkg ? pkg.price : 1499);
-  const extrasTotal = selectedExtras.reduce((sum, id) => {
-    const ex = extrasToRender.find(e => e.id === id);
-    return sum + (ex ? ex.price : 0);
-  }, 0);
-  const subtotal = basePrice + extrasTotal;
-  const taxes = Math.round(subtotal * 0.05);
-  const discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
-  const totalAmount = subtotal + taxes - discount;
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(1);
 
-  // Advance Payment calculations
-  const advancePercent = advanceOption === 'full' ? 100 : Number(advanceOption);
-  const payNow = advanceOption === 'full' ? totalAmount : Math.round((totalAmount * advancePercent) / 100);
-  const remainingBalance = totalAmount - payNow;
+  const [customerName, setCustomerName] = useState(user?.name || '');
+  const [customerEmail, setCustomerEmail] = useState(user?.email || '');
+  const [customerPhone, setCustomerPhone] = useState('');
 
-  function toggleExtra(id) {
-    setSelectedExtras(prev =>
-      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
-    );
-  }
+  const [hotelPreference, setHotelPreference] = useState('4 Star'); // '3 Star' | '4 Star' | '5 Star'
+  const [airportPickup, setAirportPickup] = useState(true);
+  const [localTransportation, setLocalTransportation] = useState(true);
+  const [additionalRequirements, setAdditionalRequirements] = useState('');
+  const [contactPreference, setContactPreference] = useState('WhatsApp'); // 'WhatsApp' | 'Phone Call' | 'Email'
 
-  function applyPromo() {
-    if (promo) {
-      applyPromoCode(promo);
-      if (promo.toUpperCase() === 'DUBAI10' || promo.toUpperCase() === 'BALI30' || promo.toUpperCase() === 'WELCOME50' || promo.toUpperCase() === 'TRAVEL20') {
-        setPromoApplied(true);
-      }
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedBooking, setSubmittedBooking] = useState(null);
+  const [selectedInvoiceModal, setSelectedInvoiceModal] = useState(null);
+
+  // Form submission handler
+  const handleSubmitBookingRequest = async (e) => {
+    e.preventDefault();
+
+    if (!customerName.trim()) {
+      showToast('Please enter your full name', 'error');
+      return;
     }
-  }
-
-  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null);
-
-  const handleDownloadInvoice = () => {
-    const currentBookingData = {
-      bookingId: confirmedBookingId || `TRV${Math.floor(10000 + Math.random() * 90000)}`,
-      packageTitle: activeTour.title,
-      fullName: form.fullName || user?.name || 'Valued Traveler',
-      email: form.email || user?.email || 'customer@maxxjoytours.com',
-      phone: form.phone || '+91 98047 77879',
-      travelDate: form.travelDate || 'Upcoming Date',
-      travelers: form.travelers || '2 Adults',
-      duration: activeTour.duration || '5 Days / 4 Nights',
-      totalAmount: grandTotal,
-      amountPaid: paidNow,
-      balanceDue: remainingBalance,
-      currencySymbol: currency === 'INR' ? '₹' : '$'
-    };
-    setSelectedInvoiceBooking(currentBookingData);
-  };
-
-  const handleDownloadItinerary = () => {
-    const currentBookingData = {
-      bookingId: confirmedBookingId || `TRV${Math.floor(10000 + Math.random() * 90000)}`,
-      packageTitle: activeTour.title,
-      travelDate: form.travelDate || 'Upcoming Date',
-      travelers: form.travelers || '2 Adults',
-      duration: activeTour.duration || '5 Days / 4 Nights',
-    };
-    showToast('🗺️ Detailed travel itinerary downloaded!', 'success');
-    generateAndDownloadItinerary(currentBookingData, legalSettings);
-  };
-
-  // Razorpay Integration Helper
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  const handleRazorpayPayment = async () => {
-    showToast('💳 Opening Razorpay Secure Payment Gateway...', 'info');
-    
-    const isLoaded = await loadRazorpayScript();
-    
-    if (!isLoaded || !window.Razorpay) {
-      // Fallback simulated payment ID if network/adblock prevents loading
-      const razorpayPaymentId = `pay_${Math.random().toString(36).substring(2, 12)}`;
-      finishBookingProcess(`Razorpay (Payment ID #${razorpayPaymentId})`);
+    if (!customerEmail.trim() || !customerEmail.includes('@')) {
+      showToast('Please enter a valid email address', 'error');
+      return;
+    }
+    if (!customerPhone.trim() || customerPhone.length < 7) {
+      showToast('Please enter a valid phone / WhatsApp number', 'error');
       return;
     }
 
-    const options = {
-      key: 'rzp_test_MAX9928374', // Razorpay Test Key ID
-      amount: payNow * 100, // Amount in paise
-      currency: 'INR',
-      name: 'Perfect Travel Experiences',
-      description: `Tour Booking: ${activeTour.title}`,
-      image: 'https://ui-avatars.com/api/?name=Perfect+Travel&background=0A4D8C&color=fff',
-      handler: function (response) {
-        showToast(`🎉 Razorpay Payment Successful! (ID: ${response.razorpay_payment_id})`, 'success');
-        finishBookingProcess(`Razorpay (Payment ID: ${response.razorpay_payment_id})`);
+    setIsSubmitting(true);
+
+    const randomId = `TRV-${Math.floor(10000 + Math.random() * 90000)}`;
+    const travellersText = `${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}`;
+
+    const newBookingData = {
+      bookingId: randomId,
+      packageTitle: activeTour.title,
+      destination: activeTour.destinationName || activeTour.location || 'Dubai, UAE',
+      image: activeTour.image,
+      duration: activeTour.duration || '5 Days / 4 Nights',
+      travelDate,
+      adults,
+      children,
+      travelers: travellersText,
+      guestName: customerName.trim(),
+      guestEmail: customerEmail.trim(),
+      guestPhone: customerPhone.trim(),
+      hotelPreference,
+      transportRequired: {
+        airportPickup,
+        localTransportation
       },
-      prefill: {
-        name: form.name || 'Traveler',
-        email: form.email || 'guest@example.com',
-        contact: form.phone || '+91 9876543210'
-      },
-      theme: {
-        color: '#0A4D8C'
-      }
+      contactPreference,
+      additionalRequirements: additionalRequirements.trim(),
+      status: 'Request Submitted',
+      estimatedCost: (activeTour.price || 1499) * adults + Math.round((activeTour.price || 1499) * 0.6 * children),
+      totalAmount: (activeTour.price || 1499) * adults + Math.round((activeTour.price || 1499) * 0.6 * children),
+      price: activeTour.price || 1499,
+      basePrice: activeTour.price || 1499
     };
 
     try {
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response) {
-        showToast(`Razorpay Payment Failed: ${response.error.description}`, 'error');
-      });
-      rzp.open();
-    } catch (e) {
-      const razorpayPaymentId = `pay_${Math.random().toString(36).substring(2, 12)}`;
-      finishBookingProcess(`Razorpay (Payment ID #${razorpayPaymentId})`);
+      const created = await addBooking(newBookingData);
+      setSubmittedBooking(created || newBookingData);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setSubmittedBooking(newBookingData);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const finishBookingProcess = (selectedMethodName) => {
-    addBooking({
-      packageTitle: activeTour.title,
-      destination: activeTour.location || activeTour.destinationName || 'Dubai, UAE',
-      travelDate: `2026-09-${selectedDate < 10 ? '0' + selectedDate : selectedDate}`,
-      travelers: `${form.travelers || 2} Adults`,
-      totalAmount,
-      totalPaid: payNow,
-      amountPaid: payNow,
-      balanceDue: remainingBalance,
-      advancePercent,
-      paymentType: advanceOption === 'full' ? 'Full' : 'Partial',
-      paymentStatus: remainingBalance === 0 ? 'Paid' : 'Partial',
-      price: totalAmount,
-      image: activeTour.image,
-      duration: activeTour.duration || '5 Days',
-      guestName: form.name || 'Traveler',
-      guestEmail: form.email || 'guest@example.com',
-      guestPhone: form.phone || '',
-      paymentMethod: selectedMethodName
-    });
-
-    if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
-    }
-  };
-
-  function goNext() {
-    if (currentStep === 4) {
-      if (paymentGatewayMethod === 'razorpay') {
-        handleRazorpayPayment();
-        return;
+  // Format date helper for human readable display
+  const formatDateDisplay = (dateStr) => {
+    try {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       }
-      const selectedMethodName = paymentGatewayMethod === 'card'
-        ? `Credit Card (**** ${payForm.card?.slice(-4) || '4242'})`
-        : `Pay Online (Instant Transfer / Ref #${onlineTxnRef || 'PAY992'})`;
+    } catch (e) {}
+    return dateStr;
+  };
 
-      finishBookingProcess(selectedMethodName);
-      return;
-    }
-    if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
-    }
-  }
-  function goPrev() { if (currentStep > 1) setCurrentStep(s => s - 1); }
-
-  const renderDetails = () => (
-    <section>
-      <SectionHeader num={1} title="Traveler Information" />
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-6 space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Lead Traveler Full Name">
-            <input
-              className="booking-input"
-              placeholder="e.g. John Doe"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-            />
-          </Field>
-          <Field label="Email Address">
-            <input
-              className="booking-input"
-              placeholder="john@example.com"
-              type="email"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-            />
-          </Field>
-          <Field label="Phone Number">
-            <div className="flex">
-              <select className="rounded-l-xl border border-[#E2E8F0] border-r-0 bg-[#F5F9FC] text-sm px-3 text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#0A4D8C]/20">
-                <option>+971</option><option>+1</option><option>+44</option><option>+91</option>
-              </select>
-              <input
-                className="flex-1 rounded-r-xl border border-[#E2E8F0] bg-[#F5F9FC] px-4 py-3 text-sm text-[#1A1A1A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0A4D8C]/20"
-                placeholder="50 123 4567"
-                type="tel"
-                value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-          </Field>
-          <Field label="Additional Travelers">
-            <select
-              className="booking-input"
-              value={form.travelers}
-              onChange={e => setForm({ ...form, travelers: e.target.value })}
-            >
-              <option value="0">0 travelers</option>
-              <option value="1">1 traveler</option>
-              <option value="2">2 travelers</option>
-              <option value="3">3 travelers</option>
-              <option value="4">4+ travelers</option>
-            </select>
-          </Field>
-        </div>
-        <Field label="Special Requests (Optional)">
-          <textarea
-            className="booking-input resize-none h-24"
-            placeholder="Dietary requirements, accessibility needs, special occasions…"
-          />
-        </Field>
-      </div>
-    </section>
-  );
-
-  const renderPackage = () => (
-    <section className="space-y-6">
-      <SectionHeader num={2} title="Package Selection" />
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-6">
-        <h3 className="text-base font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#FF7A00] text-xl">calendar_month</span>
-          Select Travel Date —{' '}
-          <span className="text-[#64748B] font-normal text-sm">October 2025</span>
-        </h3>
-        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-[#64748B] mb-2 uppercase tracking-widest">
-          {DAY_HEADERS.map(d => <div key={d}>{d}</div>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {CALENDAR_DAYS.map(({ day, disabled, today }, i) => (
-            <button
-              key={i}
-              disabled={disabled}
-              onClick={() => !disabled && setSelectedDate(day)}
-              className={[
-                'p-2.5 rounded-xl text-sm font-medium transition-all',
-                disabled ? 'text-[#E2E8F0] cursor-not-allowed' : '',
-                !disabled && selectedDate === day
-                  ? 'bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] font-extrabold shadow-md scale-105'
-                  : !disabled && today
-                    ? 'bg-[#F5F9FC] text-[#64748B] font-bold border border-[#E2E8F0]'
-                    : !disabled
-                      ? 'hover:bg-[#F5F9FC] text-[#1A1A1A]'
-                      : ''
-              ].join(' ')}
-            >
-              {day}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {packagesToRender.map(p => (
-          <label key={p.id} htmlFor={`pkg-${p.id}`} className="cursor-pointer block">
-            <input
-              id={`pkg-${p.id}`}
-              type="radio"
-              name="room_type"
-              value={p.id}
-              checked={selectedPackage === p.id}
-              onChange={() => setSelectedPackage(p.id)}
-              className="sr-only"
-            />
-            <div className={[
-              'relative p-5 rounded-2xl border-2 transition-all h-full',
-              selectedPackage === p.id
-                ? 'border-[#1A1A1A] bg-white shadow-lg'
-                : 'border-[#E2E8F0] bg-white hover:border-[#64748B]/50 hover:bg-[#F5F9FC]'
-            ].join(' ')}>
-              {p.badge && (
-                <span className="absolute top-3 right-3 bg-[#FF7A00] text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full">
-                  {p.badge}
-                </span>
-              )}
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="font-extrabold text-lg text-[#1A1A1A]">{p.name}</h4>
-                  <p className="text-xs text-[#64748B] mt-0.5">{p.desc}</p>
-                </div>
-                <div className={[
-                  'size-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center mt-1',
-                  selectedPackage === p.id ? 'border-[#1A1A1A]' : 'border-[#E2E8F0]'
-                ].join(' ')}>
-                  {selectedPackage === p.id && <div className="size-3 rounded-full bg-[#1A1A1A]" />}
-                </div>
-              </div>
-              <div className="flex items-end gap-1 mb-4">
-                <span className="text-2xl font-black text-[#1A1A1A]">{formatPrice(p.price)}</span>
-                <span className="text-xs text-[#64748B] mb-1">/ fixed tier</span>
-              </div>
-              {p.features && (
-                <ul className="space-y-1.5">
-                  {p.features.map(f => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-[#64748B]">
-                      <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 14 }}>check_circle</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </label>
-        ))}
-      </div>
-    </section>
-  );
-
-  const renderExtras = () => (
-    <section className="space-y-6">
-      <SectionHeader num={3} title="Add Extras" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {extrasToRender.map(ex => {
-          const active = selectedExtras.includes(ex.id);
-          return (
-            <div
-              key={ex.id}
-              onClick={() => toggleExtra(ex.id)}
-              className={[
-                'cursor-pointer p-5 rounded-2xl border-2 transition-all flex items-start gap-4',
-                active
-                  ? 'border-[#1A1A1A] bg-white shadow-md'
-                  : 'border-[#E2E8F0] bg-white hover:border-[#64748B]/50 hover:bg-[#F5F9FC]'
-              ].join(' ')}
-            >
-              <div className={[
-                'size-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all border',
-                active ? 'bg-white border-[#1A1A1A] text-[#1A1A1A]' : 'bg-[#F5F9FC] border-[#E2E8F0] text-[#64748B]'
-              ].join(' ')}>
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{ex.icon || 'star'}</span>
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-bold text-[#1A1A1A]">{ex.label}</h4>
-                  <div className={[
-                    'size-5 rounded-md border-2 flex items-center justify-center transition-all',
-                    active ? 'bg-[#1A1A1A] border-[#1A1A1A]' : 'border-[#E2E8F0]'
-                  ].join(' ')}>
-                    {active && <span className="material-symbols-outlined text-white" style={{ fontSize: 13 }}>check</span>}
-                  </div>
-                </div>
-                <p className="text-xs text-[#64748B] mt-0.5">{ex.desc}</p>
-                <p className="text-sm font-extrabold text-[#1A1A1A] mt-2">+{formatPrice(ex.price)}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-
-  const renderPayment = () => (
-    <section className="space-y-6">
-      <SectionHeader num={4} title="Payment & Advance Options" />
-      
-      {/* ── Choose Payment Option (Full vs Advance) ────────────── */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-6 space-y-4">
-        <h4 className="font-extrabold text-[#1A1A1A] text-sm flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#0A4D8C]" style={{ fontSize: 18 }}>account_balance_wallet</span>
-          Choose Payment Option
-        </h4>
-
-        <div className="space-y-3">
-          {/* Pay Full Amount */}
-          {paymentSettings.allowFullPayment && (
-            <label
-              onClick={() => setAdvanceOption('full')}
-              className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
-                advanceOption === 'full'
-                  ? 'border-[#0A4D8C] bg-[#0A4D8C]/5 shadow-xs'
-                  : 'border-[#E2E8F0] bg-white hover:border-[#0A4D8C]/40'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`size-5 rounded-full border-2 flex items-center justify-center ${advanceOption === 'full' ? 'border-[#0A4D8C]' : 'border-slate-300'}`}>
-                  {advanceOption === 'full' && <div className="size-2.5 rounded-full bg-[#0A4D8C]" />}
-                </div>
-                <div>
-                  <p className="font-extrabold text-sm text-[#1A1A1A]">Pay Full Amount</p>
-                  <p className="text-[11px] text-[#64748B]">Complete 100% booking payment now</p>
-                </div>
-              </div>
-              <span className="font-black text-[#1A1A1A] text-base">{formatPrice(totalAmount)}</span>
-            </label>
-          )}
-
-          {/* Pay 25% Advance */}
-          {paymentSettings.allowPartialPayment && (
-            <label
-              onClick={() => setAdvanceOption('25')}
-              className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
-                advanceOption === '25'
-                  ? 'border-[#0A4D8C] bg-[#0A4D8C]/5 shadow-xs'
-                  : 'border-[#E2E8F0] bg-white hover:border-[#0A4D8C]/40'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`size-5 rounded-full border-2 flex items-center justify-center ${advanceOption === '25' ? 'border-[#0A4D8C]' : 'border-slate-300'}`}>
-                  {advanceOption === '25' && <div className="size-2.5 rounded-full bg-[#0A4D8C]" />}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-extrabold text-sm text-[#1A1A1A]">Pay 25% Advance</p>
-                    <span className="bg-[#FF7A00]/10 text-[#FF7A00] px-2 py-0.5 rounded-full text-[10px] font-black">Popular</span>
-                  </div>
-                  <p className="text-[11px] text-[#64748B]">
-                    Remaining: {formatPrice(totalAmount - Math.round(totalAmount * 0.25))}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="font-black text-[#0A4D8C] text-base block">{formatPrice(Math.round(totalAmount * 0.25))}</span>
-                <span className="text-[10px] text-slate-400 font-extrabold">Pay Now</span>
-              </div>
-            </label>
-          )}
-
-          {/* Pay 50% Advance */}
-          {paymentSettings.allowPartialPayment && (
-            <label
-              onClick={() => setAdvanceOption('50')}
-              className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
-                advanceOption === '50'
-                  ? 'border-[#0A4D8C] bg-[#0A4D8C]/5 shadow-xs'
-                  : 'border-[#E2E8F0] bg-white hover:border-[#0A4D8C]/40'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`size-5 rounded-full border-2 flex items-center justify-center ${advanceOption === '50' ? 'border-[#0A4D8C]' : 'border-slate-300'}`}>
-                  {advanceOption === '50' && <div className="size-2.5 rounded-full bg-[#0A4D8C]" />}
-                </div>
-                <div>
-                  <p className="font-extrabold text-sm text-[#1A1A1A]">Pay 50% Advance</p>
-                  <p className="text-[11px] text-[#64748B]">
-                    Remaining: {formatPrice(totalAmount - Math.round(totalAmount * 0.50))}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="font-black text-[#0A4D8C] text-base block">{formatPrice(Math.round(totalAmount * 0.50))}</span>
-                <span className="text-[10px] text-slate-400 font-extrabold">Pay Now</span>
-              </div>
-            </label>
-          )}
-        </div>
-      </div>
-
-      {/* ── Promo & Credit Card Details ──────────────────────────── */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-6 space-y-5">
-        <div className="flex gap-3">
-          <input
-            className="booking-input flex-1"
-            placeholder="Promo Code (try DUBAI10, BALI30)"
-            value={promo}
-            onChange={e => setPromo(e.target.value)}
-          />
-          <button
-            onClick={applyPromo}
-            className={[
-              'px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap border cursor-pointer',
-              promoApplied
-                ? 'bg-green-50 border-green-300 text-green-700'
-                : 'bg-white border-[#E2E8F0] text-[#1A1A1A] hover:bg-[#F5F9FC] hover:border-[#64748B]/40'
-            ].join(' ')}
-          >
-            {promoApplied ? '✓ Applied' : 'Apply'}
-          </button>
-        </div>
-
-        {promoApplied && (
-          <p className="text-xs text-emerald-600 font-extrabold flex items-center gap-1">
-            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check_circle</span>
-            Promo discount applied successfully!
-          </p>
-        )}
-
-        <div className="pt-2 border-t border-[#E2E8F0] space-y-4">
-          <h4 className="font-extrabold text-[#1A1A1A] text-sm flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#0A4D8C]" style={{ fontSize: 18 }}>credit_score</span>
-            Select Payment Method
-          </h4>
-
-          {/* 3 Gateway Method Options */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            
-            {/* Method 1: Razorpay / UPI / Net Banking */}
-            <button
-              type="button"
-              onClick={() => setPaymentGatewayMethod('razorpay')}
-              className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                paymentGatewayMethod === 'razorpay'
-                  ? 'border-[#0A4D8C] bg-[#0A4D8C]/5 shadow-xs'
-                  : 'border-[#E2E8F0] bg-white hover:border-[#0A4D8C]/40'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-black text-xs text-[#0A4D8C]">Razorpay & UPI</span>
-                <span className="text-[10px] font-black bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">Popular</span>
-              </div>
-              <p className="text-[11px] text-[#64748B] font-medium">GPay, PhonePe, Paytm, BHIM & Net Banking</p>
-            </button>
-
-            {/* Method 2: Credit / Debit Card */}
-            <button
-              type="button"
-              onClick={() => setPaymentGatewayMethod('card')}
-              className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                paymentGatewayMethod === 'card'
-                  ? 'border-[#0A4D8C] bg-[#0A4D8C]/5 shadow-xs'
-                  : 'border-[#E2E8F0] bg-white hover:border-[#0A4D8C]/40'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-black text-xs text-slate-900">Credit / Debit Card</span>
-                <span className="text-[10px] font-bold text-slate-400">Online</span>
-              </div>
-              <p className="text-[11px] text-[#64748B] font-medium">Visa, Mastercard, RuPay & Amex</p>
-            </button>
-
-            {/* Method 3: Pay Online / QR Transfer */}
-            <button
-              type="button"
-              onClick={() => setPaymentGatewayMethod('pay_online')}
-              className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                paymentGatewayMethod === 'pay_online'
-                  ? 'border-[#0A4D8C] bg-[#0A4D8C]/5 shadow-xs'
-                  : 'border-[#E2E8F0] bg-white hover:border-[#0A4D8C]/40'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-black text-xs text-emerald-700">Pay Online & QR</span>
-                <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">Instant</span>
-              </div>
-              <p className="text-[11px] text-[#64748B] font-medium">Scan QR or Direct Bank Wire</p>
-            </button>
-
-          </div>
-
-          {/* Conditional Input UI per Method */}
-          {paymentGatewayMethod === 'razorpay' && (
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-blue-600 text-lg">account_balance</span>
-                <span className="font-extrabold text-slate-900 text-xs">Razorpay UPI & Net Banking Gateway</span>
-              </div>
-              <Field label="Enter VPA / UPI ID (Optional for Quick Verification)">
-                <input
-                  className="booking-input"
-                  placeholder="e.g. mobile@upi, name@okaxis"
-                  value={upiId}
-                  onChange={e => setUpiId(e.target.value)}
-                />
-              </Field>
-              <div className="flex flex-wrap gap-2 text-[10px] font-extrabold text-slate-600">
-                <span className="bg-white border border-slate-200 px-2.5 py-1 rounded-md">✓ Google Pay</span>
-                <span className="bg-white border border-slate-200 px-2.5 py-1 rounded-md">✓ PhonePe</span>
-                <span className="bg-white border border-slate-200 px-2.5 py-1 rounded-md">✓ Paytm UPI</span>
-                <span className="bg-white border border-slate-200 px-2.5 py-1 rounded-md">✓ 50+ Banks Net Banking</span>
-              </div>
-            </div>
-          )}
-
-          {paymentGatewayMethod === 'card' && (
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 space-y-4">
-              <Field label="Card Number">
-                <input
-                  className="booking-input font-mono tracking-widest"
-                  placeholder="4242  4242  4242  4242"
-                  maxLength={19}
-                  value={payForm.card}
-                  onChange={e => setPayForm({ ...payForm, card: e.target.value })}
-                />
-              </Field>
-              <Field label="Cardholder Name">
-                <input
-                  className="booking-input"
-                  placeholder="As on card"
-                  value={payForm.holder}
-                  onChange={e => setPayForm({ ...payForm, holder: e.target.value })}
-                />
-              </Field>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Expiry Date">
-                  <input
-                    className="booking-input"
-                    placeholder="12 / 28"
-                    value={payForm.expiry}
-                    onChange={e => setPayForm({ ...payForm, expiry: e.target.value })}
-                  />
-                </Field>
-                <Field label="CVV Security Code">
-                  <input
-                    className="booking-input"
-                    placeholder="•••"
-                    maxLength={4}
-                    value={payForm.cvv}
-                    onChange={e => setPayForm({ ...payForm, cvv: e.target.value })}
-                  />
-                </Field>
-              </div>
-            </div>
-          )}
-
-          {paymentGatewayMethod === 'pay_online' && (
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-xl">
-                <div>
-                  <p className="font-extrabold text-xs text-slate-900">Direct Online Scan & Bank Wire</p>
-                  <p className="text-[11px] text-slate-500 font-mono">Account: Perfect Travel Pvt Ltd</p>
-                  <p className="text-[10px] text-slate-400 font-mono">IFSC: HDFC0001234 · A/C: 502000889911</p>
-                </div>
-                <div className="size-16 rounded-xl bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-400 font-bold text-[10px]">
-                  [Scan QR]
-                </div>
-              </div>
-              <Field label="Payment Reference / UTR Number">
-                <input
-                  className="booking-input font-mono"
-                  placeholder="e.g. UTR98421054"
-                  value={onlineTxnRef}
-                  onChange={e => setOnlineTxnRef(e.target.value)}
-                />
-              </Field>
-            </div>
-          )}
-
-        </div>
-        <div className="flex flex-wrap items-center gap-5 pt-2 border-t border-[#E2E8F0]">
-          {[
-            { icon: 'verified_user', text: '256-bit SSL Encrypted' },
-            { icon: 'lock', text: 'PCI DSS Compliant' },
-            { icon: 'shield', text: 'Razorpay / Stripe Gateways' },
-          ].map(b => (
-            <div key={b.icon} className="flex items-center gap-1.5 text-xs text-[#64748B]">
-              <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 14 }}>{b.icon}</span>
-              {b.text}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-
-  const renderConfirm = () => (
-    <section>
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-8 text-center space-y-6">
-        <div className="size-20 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
-          <span className="material-symbols-outlined text-emerald-600 text-4xl">check_circle</span>
-        </div>
-
-        <div>
-          <h2 className="text-3xl font-black text-[#1A1A1A]">🎉 Booking Confirmed!</h2>
-          <p className="text-[#64748B] text-xs mt-1">
-            Thank you for booking with us. Confirmation sent to{' '}
-            <strong className="text-[#1A1A1A] font-bold">{form.email || 'your email'}</strong>.
-          </p>
-        </div>
-
-        {/* Confirmation Receipt Breakdown */}
-        <div className="bg-[#F5F9FC] border border-[#E2E8F0] rounded-2xl p-5 text-left space-y-3 max-w-md mx-auto">
-          <Row label="Booking Reference ID" value={`TRV${Math.floor(10000 + Math.random() * 90000)}`} bold />
-          <Row label="Tour Package" value={activeTour.title} />
-          <Row label="Travel Date" value={`2026-09-${selectedDate < 10 ? '0' + selectedDate : selectedDate}`} />
-          <Row label="Travelers" value={`${form.travelers || 2} Adults`} />
+  // If successfully submitted, show the Customer Request Confirmation Screen
+  if (submittedBooking) {
+    return (
+      <div className="min-h-screen bg-[#F5F9FC] font-sans py-12 px-4 sm:px-6 md:px-8">
+        <div className="max-w-2xl mx-auto space-y-6">
           
-          <div className="pt-3 border-t border-[#E2E8F0] space-y-2">
-            <div className="flex justify-between text-xs text-slate-600 font-medium">
-              <span>Total Package Cost:</span>
-              <span className="font-bold text-slate-900">{formatPrice(totalAmount)}</span>
+          {/* Main Success Card */}
+          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-10 shadow-xl space-y-6 text-center">
+            
+            {/* Animated Celebration Icon */}
+            <div className="size-20 bg-amber-50 border-2 border-amber-200 rounded-full flex items-center justify-center mx-auto shadow-inner text-4xl animate-bounce">
+              🎉
             </div>
-            <div className="flex justify-between text-emerald-700 font-extrabold text-sm">
-              <span>Paid Now ({advancePercent}%):</span>
-              <span>{formatPrice(payNow)} ✓</span>
+
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 border border-emerald-200 text-emerald-700 uppercase tracking-wider mb-2">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                🟡 Request Submitted · Awaiting Confirmation
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-black text-[#1A1A1A] font-header">
+                Booking Request Submitted!
+              </h1>
+              <p className="text-xs sm:text-sm text-[#64748B] mt-2 max-w-md mx-auto leading-relaxed">
+                Thank you for choosing <strong className="text-[#1A1A1A]">{legalSettings?.companyName || 'Maxx Joy Tours and Travel Pvt Ltd'}</strong>. Your travel enquiry has been successfully logged with our reservation concierge.
+              </p>
             </div>
-            {remainingBalance > 0 && (
-              <div className="flex justify-between text-amber-600 font-extrabold text-xs pt-1 border-t border-slate-200">
-                <span>Remaining Balance Due:</span>
-                <span>{formatPrice(remainingBalance)}</span>
+
+            {/* Request Summary Receipt Box */}
+            <div className="bg-[#F5F9FC] border border-[#E2E8F0] rounded-2xl p-5 text-left space-y-3.5 text-xs">
+              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Booking Request ID</span>
+                  <span className="font-mono text-base font-black text-[#0A4D8C]">{submittedBooking.bookingId}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Lead Traveler</span>
+                  <span className="font-extrabold text-[#1A1A1A]">{submittedBooking.guestName}</span>
+                </div>
               </div>
-            )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Package Name</span>
+                  <span className="font-bold text-[#1A1A1A] text-sm">{submittedBooking.packageTitle}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Travel Date</span>
+                  <span className="font-bold text-[#1A1A1A] text-sm">{formatDateDisplay(submittedBooking.travelDate)}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Travellers</span>
+                  <span className="font-bold text-[#1A1A1A]">{submittedBooking.travelers}</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Hotel Preference</span>
+                  <span className="font-bold text-[#FF7A00]">{submittedBooking.hotelPreference} Accommodation</span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Transport Selected</span>
+                  <span className="font-medium text-[#1A1A1A]">
+                    {[
+                      submittedBooking.transportRequired?.airportPickup && 'Airport Pickup',
+                      submittedBooking.transportRequired?.localTransportation && 'Local Transportation'
+                    ].filter(Boolean).join(' + ') || 'Self Arranged'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block">Preferred Contact</span>
+                  <span className="font-bold text-[#0A4D8C]">{submittedBooking.contactPreference}</span>
+                </div>
+              </div>
+
+              {submittedBooking.additionalRequirements && (
+                <div className="pt-3 border-t border-[#E2E8F0]">
+                  <span className="text-[10px] font-extrabold text-[#64748B] uppercase tracking-wider block mb-0.5">Special Requirements</span>
+                  <p className="text-xs text-[#1A1A1A] italic bg-white p-2.5 rounded-xl border border-[#E2E8F0]">
+                    "{submittedBooking.additionalRequirements}"
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Reassurance Notice */}
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 text-xs text-amber-900 flex items-start gap-3 text-left">
+              <span className="material-symbols-outlined text-amber-600 text-lg flex-shrink-0 mt-0.5">verified_user</span>
+              <div className="space-y-1">
+                <p className="font-extrabold text-amber-950">Next Steps & Confirmation</p>
+                <p className="text-amber-800 leading-relaxed text-[11px]">
+                  Our travel specialist will contact you via <strong>{submittedBooking.contactPreference}</strong> ({submittedBooking.guestPhone}) shortly to verify hotel availability, customize your itinerary, and finalize booking details.
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavigateMyBookings) {
+                    onNavigateMyBookings();
+                  } else {
+                    window.location.href = '/my-bookings';
+                  }
+                }}
+                className="w-full bg-[#1A1A1A] text-white font-extrabold py-3.5 px-6 rounded-2xl text-xs sm:text-sm hover:bg-[#333] shadow-lg shadow-[#1A1A1A]/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">confirmation_number</span>
+                View My Booking Request
+              </button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    showToast('Generating Quotation / Request Summary PDF...', 'info');
+                    generateAndDownloadInvoice(submittedBooking, legalSettings);
+                  }}
+                  className="w-full bg-white border border-[#E2E8F0] text-[#1A1A1A] font-bold py-3 px-4 rounded-2xl text-xs hover:bg-[#F5F9FC] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm text-[#0A4D8C]">download</span>
+                  Download Quotation Summary
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onExploreMore) onExploreMore();
+                    else if (onBack) onBack();
+                    else window.location.href = '/';
+                  }}
+                  className="w-full bg-[#FF7A00] text-white font-extrabold py-3 px-4 rounded-2xl text-xs hover:bg-[#e56e00] shadow-md shadow-[#FF7A00]/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">explore</span>
+                  Browse More Tours
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[#64748B] flex items-center justify-center gap-1">
+              <span>📱</span>
+              <span>Need instant assistance? Call / WhatsApp us at <strong>{legalSettings?.whatsapp || '+91 98047 77879'}</strong></span>
+            </p>
+
           </div>
         </div>
-
-        {/* Dispatch Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold">
-          <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1">
-            📱 WhatsApp Confirmation Sent
-          </span>
-          <span className="bg-blue-50 text-blue-800 border border-blue-200 px-3 py-1 rounded-full flex items-center gap-1">
-            📧 Email Invoice Sent
-          </span>
-        </div>
-
-        {/* Action Receipts */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
-          {onMyBookings && (
-            <button
-              onClick={onMyBookings}
-              className="w-full sm:w-auto bg-[#0A4D8C] text-white px-5 py-3 rounded-xl font-extrabold text-xs hover:bg-[#073c6e] shadow-md transition-all cursor-pointer"
-            >
-              View My Bookings
-            </button>
-          )}
-          <button
-            onClick={handleDownloadInvoice}
-            className="w-full sm:w-auto bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-xl font-extrabold text-xs hover:bg-slate-50 transition-all cursor-pointer flex items-center justify-center gap-1"
-          >
-            <span className="material-symbols-outlined text-sm">download</span>
-            <span>Download Invoice</span>
-          </button>
-          <button
-            onClick={handleDownloadItinerary}
-            className="w-full sm:w-auto bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-xl font-extrabold text-xs hover:bg-slate-50 transition-all cursor-pointer flex items-center justify-center gap-1"
-          >
-            <span className="material-symbols-outlined text-sm">map</span>
-            <span>Itinerary</span>
-          </button>
-        </div>
-
-        <div className="pt-4">
-          <button
-            onClick={onBack}
-            className="text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            ← Back to Home Page
-          </button>
-        </div>
       </div>
-    </section>
-  );
-
-  const stepContent = [renderDetails, renderPackage, renderExtras, renderPayment, renderConfirm];
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#F5F9FC] font-sans">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-[#E2E8F0] shadow-sm">
+    <div className="min-h-screen bg-[#F5F9FC] font-sans pb-16">
+      
+      {/* ── Top Header Navigation Bar ─────────────────────────────── */}
+      <header className="sticky top-0 z-30 bg-white border-b border-[#E2E8F0] shadow-xs">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#0A4D8C]" style={{ fontSize: 20 }}>travel</span>
-            </div>
-            <div>
-              <p className="max-w-[190px] truncate text-sm font-black leading-tight text-[#1A1A1A] sm:max-w-none sm:text-base">{activeTour.title}</p>
-              <p className="text-[10px] text-[#64748B] font-medium">Verified Tour Booking Portal</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col text-right">
-              <span className="text-[10px] text-[#64748B]">Need help?</span>
-              <a href="tel:+919804777879" className="text-sm font-bold text-[#1A1A1A] hover:text-[#0A4D8C] transition-colors">+91 98047 77879</a>
-            </div>
             <button
               onClick={onBack}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#64748B] hover:text-[#0A4D8C] border border-[#E2E8F0] rounded-xl px-3 py-2 transition-all hover:border-[#0A4D8C]/30 hover:bg-[#F5F9FC] cursor-pointer"
+              className="flex items-center gap-1 text-xs font-bold text-[#64748B] hover:text-[#1A1A1A] border border-[#E2E8F0] rounded-xl px-3 py-2 transition-all hover:bg-[#F5F9FC] cursor-pointer"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_back</span>
+              <span className="material-symbols-outlined text-sm">arrow_back</span>
               Back
             </button>
+            <div className="h-6 w-[1px] bg-[#E2E8F0]" />
+            <div>
+              <h1 className="text-base sm:text-lg font-black text-[#1A1A1A]">
+                Book Your Trip
+              </h1>
+              <p className="text-[10px] sm:text-[11px] text-[#64748B] font-medium">
+                Enquiry-Based Reservation · No Online Payment Required
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Direct Travel Desk Confirmation</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-[1200px] mx-auto px-4 md:px-8 py-8 lg:py-12">
-        {/* Progress */}
-        <div className="mb-10">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-[#1A1A1A] uppercase tracking-wider text-xs font-extrabold">
-              Step {currentStep} of {totalSteps}: {STEPS[currentStep - 1].label}
+      {/* ── Main Form Container ───────────────────────────────────── */}
+      <main className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+        
+        {/* Banner Notice */}
+        <div className="mb-8 bg-gradient-to-r from-[#062c52] to-[#0A4D8C] text-white rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
+          <div className="relative z-10 max-w-3xl space-y-2">
+            <span className="inline-block bg-amber-400/20 border border-amber-300/40 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+              Hassle-Free Booking Process
             </span>
-            <span className="text-[#64748B] text-xs font-semibold">{progress}% Complete</span>
+            <h2 className="text-xl sm:text-3xl font-black font-header tracking-tight">
+              Customize & Submit Your Travel Request
+            </h2>
+            <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
+              No advance payment is collected online today. Simply share your preferred travel dates, guests, hotel class, and requirements. Our destination team will verify exact hotel availability, airport transfers, and deliver your customized quote.
+            </p>
           </div>
-          <div className="w-full bg-[#E2E8F0] h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-[#0A4D8C] h-full rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <nav className="mt-8 flex flex-wrap gap-0 border-b border-[#E2E8F0]">
-            {STEPS.map((step, idx) => {
-              const stepNum = idx + 1;
-              const isActive = stepNum === currentStep;
-              const isDone = stepNum < currentStep;
-              return (
-                <button
-                  key={step.key}
-                  onClick={() => isDone && setCurrentStep(stepNum)}
-                  className={[
-                    'flex-1 min-w-[90px] pb-4 border-b-2 flex items-center justify-center gap-2 transition-all text-sm',
-                    isActive ? 'border-[#0A4D8C] text-[#0A4D8C] font-bold'
-                      : isDone ? 'border-[#64748B] text-[#64748B] font-semibold cursor-pointer hover:opacity-80'
-                        : 'border-transparent text-[#E2E8F0] cursor-default'
-                  ].join(' ')}
-                >
-                  {isDone
-                    ? <span className="material-symbols-outlined text-emerald-600" style={{ fontSize: 16 }}>check_circle</span>
-                    : <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{step.icon}</span>
-                  }
-                  <span className="hidden sm:block">{step.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 size-48 rounded-full bg-white/5 pointer-events-none" />
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Step content */}
-          <div className="lg:col-span-2 space-y-8">
-            {stepContent[currentStep - 1]()}
+        <form onSubmit={handleSubmitBookingRequest}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            {/* ── Left 2 Columns: The Booking Form ─────────────────── */}
+            <div className="lg:col-span-2 space-y-6">
 
-            {currentStep < totalSteps && (
-              <div className="flex justify-between items-center pt-6 border-t border-[#E2E8F0]">
-                <button
-                  onClick={currentStep === 1 ? onBack : goPrev}
-                  className="px-7 py-3 rounded-xl font-bold text-[#64748B] border border-[#E2E8F0] bg-white hover:bg-[#F5F9FC] transition-all text-sm cursor-pointer"
-                >
-                  {currentStep === 1 ? '← Home' : '← Back'}
-                </button>
-                <button
-                  onClick={goNext}
-                  className="px-10 py-3 rounded-xl font-extrabold text-white bg-[#FF7A00] hover:bg-[#e56e00] shadow-lg shadow-[#FF7A00]/25 transition-all text-sm cursor-pointer"
-                >
-                  {currentStep === totalSteps - 1 ? 'Confirm Booking →' : `Continue to ${STEPS[currentStep]?.label} →`}
-                </button>
-              </div>
-            )}
-          </div>
+              {/* 1. Travel Dates & Guests */}
+              <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-[#E2E8F0]">
+                  <span className="size-8 rounded-full bg-[#1A1A1A] text-white text-xs font-black flex items-center justify-center">
+                    1
+                  </span>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-[#1A1A1A]">
+                      Select Travel Date & Travellers
+                    </h3>
+                    <p className="text-xs text-[#64748B]">When would you like to travel and with whom?</p>
+                  </div>
+                </div>
 
-          {/* Summary sidebar */}
-          <aside className="sticky top-28 space-y-4">
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm overflow-hidden">
-              <div
-                className="h-44 bg-cover bg-center relative"
-                style={{ backgroundImage: `url('${activeTour.image}')` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <p className="text-white font-black text-lg leading-tight">{activeTour.title}</p>
-                  <div className="flex items-center gap-0.5 mt-1">
-                    {[1,2,3,4,5].map(i => (
-                      <span key={i} className="material-symbols-outlined text-amber-400 fill-current text-xs">star</span>
-                    ))}
-                    <span className="text-white/90 text-[10px] ml-1.5 font-bold">
-                      {activeTour.rating || 4.9} ({activeTour.reviewsCount || 120} reviews)
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Travel Date */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-[#1A1A1A] flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm text-[#0A4D8C]">calendar_month</span>
+                      Travel Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={travelDate}
+                      onChange={(e) => setTravelDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                      className="w-full p-3.5 rounded-2xl border border-[#E2E8F0] bg-[#F5F9FC] text-xs font-bold text-[#1A1A1A] focus:outline-none focus:border-[#0A4D8C] focus:bg-white transition-all"
+                    />
+                    <span className="text-[11px] text-[#64748B] block">
+                      Selected: <strong>{formatDateDisplay(travelDate)}</strong>
                     </span>
                   </div>
-                </div>
-              </div>
 
-              <div className="p-5 space-y-4">
-                <h3 className="font-extrabold text-[#1A1A1A]">Booking Summary</h3>
-                <div className="space-y-3 text-sm">
-                  <SummaryRow icon="calendar_today" label="Selected Dates" value={`2026-09-${selectedDate < 10 ? '0' + selectedDate : selectedDate}`} />
-                  <SummaryRow icon="group" label="Travelers" value={`${form.travelers || 2} Adults`} />
-                  <SummaryRow icon="location_on" label="Destination" value={activeTour.location || activeTour.destinationName || 'Verified Tour'} />
-                  {selectedExtras.length > 0 && (
-                    <SummaryRow icon="add_circle" label="Extras" value={`${selectedExtras.length} add-on${selectedExtras.length > 1 ? 's' : ''}`} />
-                  )}
-                </div>
+                  {/* Number of Travellers */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-extrabold text-[#1A1A1A] flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm text-[#0A4D8C]">group</span>
+                      Number of Travellers
+                    </label>
 
-                <div className="border-t border-[#E2E8F0] pt-4 space-y-2 text-sm">
-                  <div className="flex justify-between text-[#64748B]">
-                    <span>Tour Base Package</span>
-                    <span>{formatPrice(basePrice)}</span>
-                  </div>
-                  {extrasTotal > 0 && (
-                    <div className="flex justify-between text-[#64748B]">
-                      <span>Extras & Upgrades</span><span>+{formatPrice(extrasTotal)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-[#64748B]">
-                    <span>Taxes & Service Fees</span><span>{formatPrice(taxes)}</span>
-                  </div>
-                  {promoApplied && (
-                    <div className="flex justify-between text-emerald-600 font-semibold">
-                      <span>Promo Discount</span><span>−{formatPrice(discount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-base font-black text-[#1A1A1A] pt-2 border-t border-[#E2E8F0]">
-                    <span>Total Amount</span><span>{formatPrice(totalAmount)}</span>
-                  </div>
-
-                  <div className="bg-[#F5F9FC] border border-[#E2E8F0] rounded-xl p-3 space-y-1.5 text-xs font-bold mt-2">
-                    <div className="flex justify-between text-[#0A4D8C]">
-                      <span>Pay Now ({advancePercent}%):</span>
-                      <span>{formatPrice(payNow)}</span>
-                    </div>
-                    {remainingBalance > 0 && (
-                      <div className="flex justify-between text-amber-600">
-                        <span>Balance Due Later:</span>
-                        <span>{formatPrice(remainingBalance)}</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Adults Counter */}
+                      <div className="bg-[#F5F9FC] border border-[#E2E8F0] rounded-2xl p-3">
+                        <span className="text-[10px] font-extrabold uppercase text-[#64748B] block mb-1">Adults (12+ yrs)</span>
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setAdults(Math.max(1, adults - 1))}
+                            className="size-8 rounded-xl bg-white border border-[#E2E8F0] font-black text-sm text-[#1A1A1A] hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            −
+                          </button>
+                          <span className="font-black text-base text-[#1A1A1A]">{adults}</span>
+                          <button
+                            type="button"
+                            onClick={() => setAdults(adults + 1)}
+                            className="size-8 rounded-xl bg-white border border-[#E2E8F0] font-black text-sm text-[#1A1A1A] hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                    )}
+
+                      {/* Children Counter */}
+                      <div className="bg-[#F5F9FC] border border-[#E2E8F0] rounded-2xl p-3">
+                        <span className="text-[10px] font-extrabold uppercase text-[#64748B] block mb-1">Children (0-11 yrs)</span>
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setChildren(Math.max(0, children - 1))}
+                            className="size-8 rounded-xl bg-white border border-[#E2E8F0] font-black text-sm text-[#1A1A1A] hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            −
+                          </button>
+                          <span className="font-black text-base text-[#1A1A1A]">{children}</span>
+                          <button
+                            type="button"
+                            onClick={() => setChildren(children + 1)}
+                            className="size-8 rounded-xl bg-white border border-[#E2E8F0] font-black text-sm text-[#1A1A1A] hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* 2. Customer Contact Details */}
+              <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-[#E2E8F0]">
+                  <span className="size-8 rounded-full bg-[#1A1A1A] text-white text-xs font-black flex items-center justify-center">
+                    2
+                  </span>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-[#1A1A1A]">
+                      Customer Details
+                    </h3>
+                    <p className="text-xs text-[#64748B]">Where should we send your booking itinerary & quote?</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  {/* Full Name */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="font-extrabold text-[#1A1A1A]">Full Name *</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="e.g. Muneeswaran MD"
+                      required
+                      className="w-full p-3.5 rounded-2xl border border-[#E2E8F0] bg-[#F5F9FC] font-bold text-[#1A1A1A] focus:outline-none focus:border-[#0A4D8C] focus:bg-white transition-all"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <label className="font-extrabold text-[#1A1A1A]">Email Address *</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="customer@email.com"
+                      required
+                      className="w-full p-3.5 rounded-2xl border border-[#E2E8F0] bg-[#F5F9FC] font-bold text-[#1A1A1A] focus:outline-none focus:border-[#0A4D8C] focus:bg-white transition-all"
+                    />
+                  </div>
+
+                  {/* Phone / WhatsApp */}
+                  <div className="space-y-1.5">
+                    <label className="font-extrabold text-[#1A1A1A]">Phone / WhatsApp *</label>
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      placeholder="+91 98047 77879"
+                      required
+                      className="w-full p-3.5 rounded-2xl border border-[#E2E8F0] bg-[#F5F9FC] font-bold text-[#1A1A1A] focus:outline-none focus:border-[#0A4D8C] focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Travel Requirements & Hotel Preference */}
+              <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-[#E2E8F0]">
+                  <span className="size-8 rounded-full bg-[#1A1A1A] text-white text-xs font-black flex items-center justify-center">
+                    3
+                  </span>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-[#1A1A1A]">
+                      Travel Requirements & Preferences
+                    </h3>
+                    <p className="text-xs text-[#64748B]">Choose your accommodation tier and transportation needs.</p>
+                  </div>
+                </div>
+
+                {/* Hotel Preference */}
+                <div className="space-y-3">
+                  <label className="text-xs font-extrabold text-[#1A1A1A] block">
+                    Hotel Preference
+                  </label>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { tier: '3 Star', desc: 'Comfort & Value', icon: 'hotel' },
+                      { tier: '4 Star', desc: 'Premium & Modern', icon: 'star' },
+                      { tier: '5 Star', desc: 'Luxury Resort & Spa', icon: 'diamond' }
+                    ].map(h => (
+                      <label
+                        key={h.tier}
+                        onClick={() => setHotelPreference(h.tier)}
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer text-center space-y-1 block ${
+                          hotelPreference === h.tier
+                            ? 'border-[#FF7A00] bg-orange-50/50 shadow-sm'
+                            : 'border-[#E2E8F0] bg-[#F5F9FC] hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-1 text-[#FF7A00] font-black text-sm">
+                          <span>{h.tier}</span>
+                        </div>
+                        <span className="text-[10px] text-[#64748B] block font-medium">{h.desc}</span>
+                        <input
+                          type="radio"
+                          name="hotelPreference"
+                          checked={hotelPreference === h.tier}
+                          onChange={() => setHotelPreference(h.tier)}
+                          className="sr-only"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Transport Required */}
+                <div className="space-y-3 pt-2">
+                  <label className="text-xs font-extrabold text-[#1A1A1A] block">
+                    Transport Required
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className={`flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${
+                      airportPickup ? 'border-[#0A4D8C] bg-blue-50/50' : 'border-[#E2E8F0] bg-[#F5F9FC]'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={airportPickup}
+                        onChange={(e) => setAirportPickup(e.target.checked)}
+                        className="size-4 accent-[#0A4D8C] rounded-sm"
+                      />
+                      <div>
+                        <span className="font-extrabold text-xs text-[#1A1A1A] block">Airport Pickup & Drop</span>
+                        <span className="text-[10px] text-[#64748B]">Private AC vehicle on arrival & departure</span>
+                      </div>
+                    </label>
+
+                    <label className={`flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${
+                      localTransportation ? 'border-[#0A4D8C] bg-blue-50/50' : 'border-[#E2E8F0] bg-[#F5F9FC]'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={localTransportation}
+                        onChange={(e) => setLocalTransportation(e.target.checked)}
+                        className="size-4 accent-[#0A4D8C] rounded-sm"
+                      />
+                      <div>
+                        <span className="font-extrabold text-xs text-[#1A1A1A] block">Local Transportation</span>
+                        <span className="text-[10px] text-[#64748B]">Dedicated cab for all sightseeing & tours</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Additional Requirements */}
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-xs font-extrabold text-[#1A1A1A] block">
+                    Additional Requirements (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={additionalRequirements}
+                    onChange={(e) => setAdditionalRequirements(e.target.value)}
+                    placeholder="e.g. Vegetarian food preferences, honeymoon room decor, baby cot, flight assistance, extra day stay..."
+                    className="w-full p-3.5 rounded-2xl border border-[#E2E8F0] bg-[#F5F9FC] text-xs font-medium text-[#1A1A1A] focus:outline-none focus:border-[#0A4D8C] focus:bg-white resize-none transition-all"
+                  />
+                </div>
+
+                {/* Contact Preference */}
+                <div className="space-y-3 pt-2">
+                  <label className="text-xs font-extrabold text-[#1A1A1A] block">
+                    How would you like us to contact you?
+                  </label>
+
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    {[
+                      { id: 'WhatsApp', icon: 'chat', label: 'WhatsApp' },
+                      { id: 'Phone Call', icon: 'call', label: 'Phone Call' },
+                      { id: 'Email', icon: 'mail', label: 'Email' }
+                    ].map(c => (
+                      <label
+                        key={c.id}
+                        onClick={() => setContactPreference(c.id)}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-2xl border transition-all cursor-pointer font-extrabold ${
+                          contactPreference === c.id
+                            ? 'border-[#0A4D8C] bg-[#0A4D8C] text-white shadow-sm'
+                            : 'border-[#E2E8F0] bg-[#F5F9FC] text-[#64748B] hover:text-[#1A1A1A]'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-sm">{c.icon}</span>
+                        <span>{c.label}</span>
+                        <input
+                          type="radio"
+                          name="contactPreference"
+                          checked={contactPreference === c.id}
+                          onChange={() => setContactPreference(c.id)}
+                          className="sr-only"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit Action */}
+                <div className="pt-4 border-t border-[#E2E8F0]">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#FF7A00] text-white font-black text-sm sm:text-base py-4 rounded-2xl hover:bg-[#e56e00] shadow-xl shadow-[#FF7A00]/25 transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Submitting Booking Request...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-lg">send</span>
+                        <span>Submit Booking Request</span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-[11px] text-center text-[#64748B] mt-2.5 flex items-center justify-center gap-1.5">
+                    <span className="material-symbols-outlined text-xs text-emerald-600">lock</span>
+                    <span>No advance payment needed today · We will confirm package details with you first</span>
+                  </p>
+                </div>
+
+              </div>
+
             </div>
 
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 flex items-start gap-3">
-              <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 20 }}>verified_user</span>
-              <div>
-                <h4 className="font-bold text-[#1A1A1A] text-sm">Best Price Guaranteed</h4>
-                <p className="text-xs text-[#64748B] mt-1">Find it cheaper elsewhere? We'll match it + give you a $50 credit.</p>
+            {/* ── Right Column: Tour Summary Sticky Card ───────────── */}
+            <div className="space-y-6 lg:sticky lg:top-24">
+              
+              {/* Package Summary Card */}
+              <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-md space-y-5">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-[#FF7A00] tracking-wider block mb-1">
+                    Selected Tour Package
+                  </span>
+                  <h3 className="text-xl font-black text-[#1A1A1A] font-header leading-snug">
+                    {activeTour.title}
+                  </h3>
+                  <p className="text-xs text-[#64748B] mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm text-[#0A4D8C]">location_on</span>
+                    {activeTour.destinationName || activeTour.location || 'Dubai, UAE'}
+                  </p>
+                </div>
+
+                <div className="relative h-44 rounded-2xl overflow-hidden border border-[#E2E8F0]">
+                  <img
+                    src={activeTour.image}
+                    alt={activeTour.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-3 left-3 bg-[#1A1A1A]/80 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase">
+                    {activeTour.duration || '5 Days / 4 Nights'}
+                  </div>
+                </div>
+
+                {/* Price Display */}
+                <div className="bg-[#F5F9FC] border border-[#E2E8F0] rounded-2xl p-4 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase text-[#64748B] tracking-wider">
+                    Starting From
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-black text-[#1A1A1A]">
+                      {formatPrice(activeTour.price || 1499)}
+                    </span>
+                    <span className="text-xs text-[#64748B]">/ person</span>
+                  </div>
+                  <p className="text-[10px] text-[#64748B] pt-1">
+                    *Final price confirmed based on hotel star rating, travel dates & inclusions.
+                  </p>
+                </div>
+
+                {/* Inclusions Preview */}
+                <div className="space-y-2 text-xs">
+                  <span className="text-[10px] font-extrabold uppercase text-[#64748B] tracking-wider block">
+                    Key Inclusions Included:
+                  </span>
+                  <ul className="space-y-2 text-[#1A1A1A]">
+                    {(activeTour.inclusions || [
+                      '5-Star Luxury Resort Stay',
+                      'Daily Breakfasts & Gourmet Meals',
+                      'Private Airport & Tour Transfers',
+                      'VIP Sightseeing Access'
+                    ]).slice(0, 4).map((inc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold text-sm">✓</span>
+                        <span className="font-medium text-[11px]">{inc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Why Enquiry-Based Notice */}
+                <div className="bg-blue-50/60 border border-blue-200/80 rounded-2xl p-4 text-xs space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[#0A4D8C] font-black text-xs">
+                    <span className="material-symbols-outlined text-sm">handshake</span>
+                    <span>100% Tailored To You</span>
+                  </div>
+                  <p className="text-[11px] text-slate-700 leading-relaxed">
+                    Our team directly coordinates with hotels and drivers to ensure peak dates and best rates before collecting advance fees.
+                  </p>
+                </div>
+
               </div>
+
+              {/* Need Immediate Help Card */}
+              <div className="bg-[#0A4D8C] text-white rounded-3xl p-6 space-y-3 shadow-md">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-300 text-xl">support_agent</span>
+                  <h4 className="font-black text-sm">Prefer Direct Booking?</h4>
+                </div>
+                <p className="text-xs text-white/80 leading-relaxed">
+                  Call or WhatsApp our travel managers directly for instant quotes & availability:
+                </p>
+                <a
+                  href={`https://wa.me/${(legalSettings?.whatsapp || '919804777879').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Maxx Joy, I would like to enquire about the ${activeTour.title} tour package.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs py-3 px-4 rounded-xl transition-all text-center flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                >
+                  <span>Chat on WhatsApp</span>
+                  <span className="material-symbols-outlined text-sm">open_in_new</span>
+                </a>
+              </div>
+
             </div>
 
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 flex items-start gap-3">
-              <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 20 }}>cancel</span>
-              <div>
-                <h4 className="font-bold text-[#1A1A1A] text-sm">Free Cancellation</h4>
-                <p className="text-xs text-[#64748B] mt-1">Cancel up to 72 hours before departure for a full refund.</p>
-              </div>
-            </div>
-          </aside>
-        </div>
+          </div>
+        </form>
+
       </main>
 
-      <footer className="mt-16 border-t border-[#E2E8F0] bg-white py-8 px-4">
-        <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#64748B]" style={{ fontSize: 18 }}>travel</span>
-            <span className="font-bold text-[#64748B] text-sm">Dubai Luxury Tour © 2025</span>
-          </div>
-          <div className="flex gap-6 text-sm text-[#64748B] font-medium">
-            <a href="#" className="hover:text-[#1A1A1A] transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-[#1A1A1A] transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-[#1A1A1A] transition-colors">Contact Support</a>
-          </div>
-        </div>
-      </footer>
-
-      <style>{`
-        .booking-input {
-          width: 100%;
-          border: 1px solid #E2E8F0;
-          border-radius: 0.75rem;
-          background-color: #F5F9FC;
-          padding: 0.75rem 1rem;
-          font-size: 0.875rem;
-          color: #1A1A1A;
-          outline: none;
-          transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
-        }
-        .booking-input::placeholder { color: #94A3B8; }
-        .booking-input:focus {
-          border-color: #1A1A1A;
-          box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
-          background-color: #ffffff;
-        }
-      `}</style>
-
-      {selectedInvoiceBooking && (
+      {selectedInvoiceModal && (
         <InvoiceModal
-          booking={selectedInvoiceBooking}
-          onClose={() => setSelectedInvoiceBooking(null)}
+          booking={selectedInvoiceModal}
+          onClose={() => setSelectedInvoiceModal(null)}
         />
       )}
     </div>
