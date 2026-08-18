@@ -2233,13 +2233,24 @@ export const AdminDashboard = ({ onBack }) => {
                     Edit Featured Offer Banner
                   </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="font-bold text-[#1F2937] block mb-1">Badge Tag</label>
+                      <input
+                        type="text"
+                        value={dealForm.badge || ''}
+                        onChange={e => setDealForm({ ...dealForm, badge: e.target.value })}
+                        placeholder="Limited Time Offer"
+                        className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-bold text-[#0A4D8C] focus:outline-none focus:border-[#0A4D8C]"
+                      />
+                    </div>
                     <div>
                       <label className="font-bold text-[#1F2937] block mb-1">Offer Title</label>
                       <input
                         type="text"
                         value={dealForm.title || ''}
                         onChange={e => setDealForm({ ...dealForm, title: e.target.value })}
+                        placeholder="Bali Summer Offer —"
                         className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-bold text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
                       />
                     </div>
@@ -2249,6 +2260,7 @@ export const AdminDashboard = ({ onBack }) => {
                         type="text"
                         value={dealForm.highlight || ''}
                         onChange={e => setDealForm({ ...dealForm, highlight: e.target.value })}
+                        placeholder="Save 40% Today!"
                         className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-bold text-[#FF7A00] focus:outline-none focus:border-[#0A4D8C]"
                       />
                     </div>
@@ -2260,6 +2272,7 @@ export const AdminDashboard = ({ onBack }) => {
                       rows={2}
                       value={dealForm.description || ''}
                       onChange={e => setDealForm({ ...dealForm, description: e.target.value })}
+                      placeholder="Book your dream Bali getaway for the upcoming season..."
                       className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-medium text-[#1F2937] focus:outline-none focus:border-[#0A4D8C] resize-none"
                     />
                   </div>
@@ -2271,6 +2284,7 @@ export const AdminDashboard = ({ onBack }) => {
                         type="text"
                         value={dealForm.promoCode || ''}
                         onChange={e => setDealForm({ ...dealForm, promoCode: e.target.value.toUpperCase() })}
+                        placeholder="BALI40"
                         className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-mono font-bold text-[#0A4D8C] focus:outline-none focus:border-[#0A4D8C]"
                       />
                     </div>
@@ -2278,18 +2292,53 @@ export const AdminDashboard = ({ onBack }) => {
                       <label className="font-bold text-[#1F2937] block mb-1">Discount %</label>
                       <input
                         type="number"
-                        value={dealForm.discountValue || 30}
-                        onChange={e => setDealForm({ ...dealForm, discountValue: Number(e.target.value) })}
+                        min="1"
+                        max="90"
+                        value={dealForm.discountValue || 40}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          setDealForm(prev => ({
+                            ...prev,
+                            discountValue: val,
+                            highlight: `Save ${val}% Today!`,
+                            buttonText: `Claim ${val}% Discount Now`,
+                            promoCode: prev.promoCode?.startsWith('BALI') ? `BALI${val}` : prev.promoCode
+                          }));
+                        }}
                         className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-bold text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
                       />
                     </div>
                     <div>
-                      <label className="font-bold text-[#1F2937] block mb-1">Valid Until</label>
+                      <label className="font-bold text-[#1F2937] block mb-1">CTA Button Text</label>
                       <input
-                        type="date"
-                        value={dealForm.validUntil || '2026-09-30'}
-                        onChange={e => setDealForm({ ...dealForm, validUntil: e.target.value })}
+                        type="text"
+                        value={dealForm.buttonText || ''}
+                        onChange={e => setDealForm({ ...dealForm, buttonText: e.target.value })}
+                        placeholder="Claim 40% Discount Now"
+                        className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-bold text-[#FF7A00] focus:outline-none focus:border-[#0A4D8C]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-[#1F2937] block mb-1">Featured Package Name</label>
+                      <input
+                        type="text"
+                        value={dealForm.packageName || ''}
+                        onChange={e => setDealForm({ ...dealForm, packageName: e.target.value })}
+                        placeholder="Ubud Luxury Pool Villa Package"
                         className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-bold text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-[#1F2937] block mb-1">Package Subtitle / Inclusions</label>
+                      <input
+                        type="text"
+                        value={dealForm.packageSubtitle || ''}
+                        onChange={e => setDealForm({ ...dealForm, packageSubtitle: e.target.value })}
+                        placeholder="8 Days / 7 Nights · All Inclusions Included"
+                        className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-medium text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
                       />
                     </div>
                   </div>
@@ -2300,6 +2349,7 @@ export const AdminDashboard = ({ onBack }) => {
                       type="url"
                       value={dealForm.image || ''}
                       onChange={e => setDealForm({ ...dealForm, image: e.target.value })}
+                      placeholder="https://images.unsplash.com/..."
                       className="w-full p-2.5 rounded-lg border border-[#E5E7EB] bg-[#F7F8FA] font-medium text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
                     />
                   </div>
@@ -2344,13 +2394,17 @@ export const AdminDashboard = ({ onBack }) => {
                     <img src={dealForm.image} alt="Deal" className="w-full h-32 object-cover" />
                     <div className="p-3 space-y-1.5 bg-[#F7F8FA]">
                       <span className="text-[10px] font-black uppercase text-[#0A4D8C] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        {dealForm.badge || 'Limited Deal'}
+                        {dealForm.badge || 'Limited Time Offer'}
                       </span>
                       <p className="font-black text-[#1F2937] text-sm">{dealForm.title} <span className="text-[#FF7A00]">{dealForm.highlight}</span></p>
                       <p className="text-[11px] text-[#6B7280] line-clamp-2">{dealForm.description}</p>
-                      <div className="pt-2 flex justify-between items-center text-[10px] font-mono font-bold text-[#0A4D8C]">
-                        <span>CODE: {dealForm.promoCode || 'BALI30'}</span>
-                        <span className="text-emerald-700 font-extrabold">Save {dealForm.discountValue || 30}%</span>
+                      <div className="p-2 bg-white rounded-lg border border-[#E5E7EB] text-[11px]">
+                        <p className="font-bold text-[#1F2937]">{dealForm.packageName || 'Package Name'}</p>
+                        <p className="text-[10px] text-[#6B7280]">{dealForm.packageSubtitle || 'Subtext'}</p>
+                      </div>
+                      <div className="pt-1 flex justify-between items-center text-[10px] font-mono font-bold text-[#0A4D8C]">
+                        <span>CODE: {dealForm.promoCode || 'BALI40'}</span>
+                        <span className="text-emerald-700 font-extrabold">{dealForm.buttonText || `Claim ${dealForm.discountValue || 40}% Discount`}</span>
                       </div>
                     </div>
                   </div>

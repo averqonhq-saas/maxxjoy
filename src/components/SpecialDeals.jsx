@@ -7,10 +7,11 @@ export const SpecialDeals = ({ onBookNow }) => {
   const deal = specialDeal || {
     badge: 'Limited Time Offer',
     title: 'Bali Summer Offer —',
-    highlight: 'Save 30% Today!',
+    highlight: 'Save 40% Today!',
     description: 'Book your dream Bali getaway for the upcoming season and enjoy exclusive discounts on overwater pool villas, private speedboats, and jungle swings.',
-    buttonText: 'Claim 30% Discount Now',
-    promoCode: 'BALI30',
+    buttonText: 'Claim 40% Discount Now',
+    promoCode: 'BALI40',
+    discountValue: 40,
     image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
     packageName: 'Ubud Luxury Pool Villa Package',
     packageSubtitle: '8 Days / 7 Nights · All Inclusions Included',
@@ -18,6 +19,9 @@ export const SpecialDeals = ({ onBookNow }) => {
   };
 
   if (deal.enabled === false) return null;
+
+  // Ensure button text always reflects current discount if not custom worded
+  const buttonLabel = deal.buttonText || (deal.discountValue ? `Claim ${deal.discountValue}% Discount Now` : 'Claim Discount Now');
 
   const handleClaimOffer = () => {
     if (deal.promoCode) {
@@ -55,7 +59,7 @@ export const SpecialDeals = ({ onBookNow }) => {
               className="bg-[#FF7A00] text-white px-9 py-4 rounded-2xl font-black text-base hover:bg-[#ff8a1c] hover:scale-105 active:scale-95 shadow-xl shadow-[#FF7A00]/25 transition-all cursor-pointer flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-xl">local_offer</span>
-              {deal.buttonText || 'Claim Discount Now'}
+              {buttonLabel}
             </button>
 
             {deal.promoCode && (

@@ -791,35 +791,53 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // ── Special Deals Banner Sync (Firebase Firestore) ────────────────────────
-  const [specialDeal, setSpecialDeal] = useState({
-    badge: 'Limited Time Offer',
-    title: 'Bali Summer Offer —',
-    highlight: 'Save 30% Today!',
-    description: 'Book your dream Bali getaway for the upcoming season and enjoy exclusive discounts on overwater pool villas, private speedboats, and jungle swings.',
-    buttonText: 'Claim 30% Discount Now',
-    promoCode: 'BALI30',
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
-    packageName: 'Ubud Luxury Pool Villa Package',
-    packageSubtitle: '8 Days / 7 Nights · All Inclusions Included',
-    enabled: true
+  // ── Special Deals Banner Sync (Firebase Firestore + LocalStorage) ─────────
+  const [specialDeal, setSpecialDeal] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pt_special_deal');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      badge: 'Limited Time Offer',
+      title: 'Bali Summer Offer —',
+      highlight: 'Save 40% Today!',
+      description: 'Book your dream Bali getaway for the upcoming season and enjoy exclusive discounts on overwater pool villas, private speedboats, and jungle swings.',
+      buttonText: 'Claim 40% Discount Now',
+      promoCode: 'BALI40',
+      discountType: 'percentage',
+      discountValue: 40,
+      image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
+      packageName: 'Ubud Luxury Pool Villa Package',
+      packageSubtitle: '8 Days / 7 Nights · All Inclusions Included',
+      showOnHomepage: true,
+      enabled: true
+    };
   });
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'settings', 'special_deal'), (snap) => {
       if (snap.exists()) {
-        setSpecialDeal(prev => ({ ...prev, ...snap.data() }));
+        const data = snap.data();
+        setSpecialDeal(prev => {
+          const updated = { ...prev, ...data };
+          localStorage.setItem('pt_special_deal', JSON.stringify(updated));
+          return updated;
+        });
       }
     }, () => {});
     return () => unsub();
   }, []);
 
   const updateSpecialDeal = async (newDealData) => {
-    setSpecialDeal(prev => ({ ...prev, ...newDealData }));
+    setSpecialDeal(prev => {
+      const updated = { ...prev, ...newDealData };
+      localStorage.setItem('pt_special_deal', JSON.stringify(updated));
+      return updated;
+    });
     try {
       await setDoc(doc(db, 'settings', 'special_deal'), newDealData, { merge: true });
       showToast('🔥 Special deal offer updated in Firebase!', 'success');
-    } catch (e) {
+    } catch {
       showToast('Special deal updated', 'info');
     }
   };
@@ -1061,7 +1079,23 @@ export const AppProvider = ({ children }) => {
   };
 
   const applyPromoCode = (code) => {
-    const promo = PROMO_CODES[code.toUpperCase()];
+    const cleanCode = (code || '').toUpperCase().trim();
+    
+    // 1. Check dynamic specialDeal promo code configured in Admin
+    if (specialDeal?.promoCode && cleanCode === specialDeal.promoCode.toUpperCase().trim()) {
+      const discountVal = specialDeal.discountValue || 40;
+      const promoObj = {
+        code: specialDeal.promoCode,
+        discountPercent: discountVal,
+        label: `${discountVal}% Summer Discount`
+      };
+      setAppliedPromoCode(promoObj);
+      showToast(`✅ ${promoObj.label} Applied!`, 'success');
+      return;
+    }
+
+    // 2. Fallback to predefined codes
+    const promo = PROMO_CODES[cleanCode];
     if (promo) {
       setAppliedPromoCode(promo);
       showToast(`✅ ${promo.label} Applied!`, 'success');
