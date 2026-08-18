@@ -23,7 +23,6 @@ export const AdminDashboard = ({ onBack }) => {
     myBookings,
     updateBooking,
     deleteBooking,
-    clearAllDataAndStartFresh,
     formatPrice,
     showToast,
     seedFirebaseData,
@@ -1012,18 +1011,6 @@ export const AdminDashboard = ({ onBack }) => {
                 >
                   <span className="material-symbols-outlined text-sm">open_in_new</span>
                   <span>Exit to Client Website</span>
-                </button>
-                <button
-                  onClick={async () => {
-                    setShowUserDropdown(false);
-                    if (window.confirm('⚠️ Are you sure you want to remove all booking inquiries and start completely fresh? This will reset all records to a clean slate.')) {
-                      await clearAllDataAndStartFresh();
-                    }
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-amber-50 flex items-center gap-2 text-amber-800 font-bold border-t border-[#E5E7EB] cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-sm text-amber-700">cleaning_services</span>
-                  <span>Clear Inquiries & Start Fresh</span>
                 </button>
                 <button
                   onClick={() => {
