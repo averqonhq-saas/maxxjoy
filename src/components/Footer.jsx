@@ -100,6 +100,18 @@ export const Footer = ({ onHome, onExploreTours, onAdmin, onContact, onPrivacy, 
       <div className="max-w-[1440px] mx-auto mt-12 pt-8 border-t border-[#E2E8F0] flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
         <p>© 2026 Maxx Joy Tours and Travel Pvt Ltd. All rights reserved.</p>
 
+        <p className="text-xs font-semibold text-slate-500">
+          Crafted with passion by{' '}
+          <a
+            href="https://www.averqon.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-extrabold text-[#0A4D8C] hover:underline"
+          >
+            averqon
+          </a>
+        </p>
+
         <div className="flex items-center gap-6">
           <button onClick={onPrivacy} className="hover:text-[#0A4D8C] transition-colors">Privacy Policy</button>
           <button onClick={onTerms} className="hover:text-[#0A4D8C] transition-colors">Terms of Service</button>

@@ -15,7 +15,7 @@ export const WhyChooseUs = () => {
         
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="text-xs font-extrabold text-[#0A4D8C] uppercase tracking-widest block mb-2">
-            The Perfect Travel Promise
+            The Maxxjoy Travel Promise
           </span>
           <h2 className="text-3xl sm:text-4xl font-black mb-3 font-header text-[#1A1A1A]">
             Why Travelers Choose Us

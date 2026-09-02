@@ -36,7 +36,7 @@ export const ReviewsSection = () => {
               <span className="material-symbols-outlined text-3xl">rate_review</span>
             </div>
             <h3 className="text-xl font-bold text-[#1A1A1A]">No Reviews Written Yet</h3>
-            <p className="text-xs text-[#64748B]">Be the first traveler to share your experience with Perfect Travel!</p>
+            <p className="text-xs text-[#64748B]">Be the first traveler to share your experience with Maxxjoy Travel!</p>
             <button
               onClick={() => setIsReviewModalOpen(true)}
               className="bg-[#FF7A00] text-white text-xs font-extrabold px-6 py-3 rounded-xl hover:bg-[#e56e00] shadow-md transition-all inline-block"

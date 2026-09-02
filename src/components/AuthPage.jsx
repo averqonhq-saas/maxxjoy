@@ -166,7 +166,7 @@ export const AuthPage = ({ onBack, onSuccess }) => {
             <span className="material-symbols-outlined text-white" style={{ fontSize: 18 }}>travel_explore</span>
           </div>
           <span className="font-black text-[#1A1A1A] text-lg">
-            Perfect <span className="text-[#64748B]">Travel</span>
+            Maxxjoy <span className="text-[#0A4D8C]">Travel</span>
           </span>
         </button>
         <button
@@ -215,7 +215,7 @@ export const AuthPage = ({ onBack, onSuccess }) => {
               <div className="mb-6">
                 <h1 className="text-2xl font-black text-[#1A1A1A]">
                   {tab === 'login' && 'Welcome back'}
-                  {tab === 'register' && 'Join Perfect Travel'}
+                  {tab === 'register' && 'Join Maxxjoy Travel'}
                   {tab === 'reset' && 'Reset Password'}
                 </h1>
                 <p className="text-[#64748B] text-sm mt-1">
