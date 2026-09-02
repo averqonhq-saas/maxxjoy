@@ -1,6 +1,17 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 
+const cleanLegalText = (rawText) => {
+  if (!rawText) return '';
+  let clean = rawText;
+  // Remove any legacy Contact Us sections matching Perfect Travel / support@perfecttravel.com / 555-123-4567
+  clean = clean.replace(/\n*\d*\.?\s*Contact Us[\s\S]*?(perfecttravel|555-123-4567|Perfect Travel)[\s\S]*/gi, '');
+  clean = clean.replace(/Perfect Travel Experiences[\s\S]*/gi, '');
+  clean = clean.replace(/support@perfecttravel\.com[\s\S]*/gi, '');
+  clean = clean.replace(/\+1\s*\(555\)\s*123-4567[\s\S]*/gi, '');
+  return clean.trim();
+};
+
 const LegalContactCard = () => (
   <div className="mt-12 pt-8 border-t border-slate-200">
     <h3 className="text-xl font-bold text-slate-900 mb-2 font-header flex items-center gap-2">
@@ -70,7 +81,7 @@ const LegalPageLayout = ({ title, lastUpdated, children }) => (
     <div className="max-w-[800px] mx-auto px-4 sm:px-6 -mt-12">
       <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-100 min-h-[500px]">
         <div className="prose prose-slate max-w-none font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
-          {children}
+          {cleanLegalText(children)}
         </div>
         <LegalContactCard />
       </div>
@@ -85,7 +96,7 @@ export const PrivacyPolicyPage = () => {
   return (
     <LegalPageLayout 
       title="Privacy Policy" 
-      lastUpdated={legalSettings?.lastUpdated || 'Loading...'}
+      lastUpdated={legalSettings?.lastUpdated || 'August 17, 2026'}
     >
       {legalSettings?.privacyPolicy || 'Loading Privacy Policy...'}
     </LegalPageLayout>
@@ -99,7 +110,7 @@ export const TermsConditionsPage = () => {
   return (
     <LegalPageLayout 
       title="Terms & Conditions" 
-      lastUpdated={legalSettings?.lastUpdated || 'Loading...'}
+      lastUpdated={legalSettings?.lastUpdated || 'August 17, 2026'}
     >
       {legalSettings?.termsConditions || 'Loading Terms & Conditions...'}
     </LegalPageLayout>
@@ -113,10 +124,11 @@ export const CookiePolicyPage = () => {
   return (
     <LegalPageLayout 
       title="Cookie Policy" 
-      lastUpdated={legalSettings?.lastUpdated || 'Loading...'}
+      lastUpdated={legalSettings?.lastUpdated || 'August 17, 2026'}
     >
       {legalSettings?.cookiePolicy || 'Loading Cookie Policy...'}
     </LegalPageLayout>
   );
 };
+
 
