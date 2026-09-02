@@ -6,7 +6,9 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, addDoc,
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 
 const INITIAL_REAL_STAFF = [
-  { id: 'st1', name: 'Muneeswaran (Admin)', email: 'muneeswaranmd2004@gmail.com', role: 'Super Admin', status: 'Active', lastActive: 'Online now' }
+  { id: 'st1', name: 'Muneeswaran (Admin)', email: 'muneeswaranmd2004@gmail.com', role: 'Super Admin', status: 'Active', lastActive: 'Online now' },
+  { id: 'st2', name: 'Yogaprathap (Admin)', email: 'Yogaprathap@maxxjoytours.com', role: 'Admin', status: 'Active', lastActive: 'Online now' },
+  { id: 'st3', name: 'George (Admin)', email: 'George@maxxjoytours.com', role: 'Admin', status: 'Active', lastActive: 'Online now' }
 ];
 
 export const AdminDashboard = ({ onBack }) => {
@@ -319,49 +321,97 @@ export const AdminDashboard = ({ onBack }) => {
   };
 
   // ── Authentication State ─────────────────────────────────────────────────
-  const [adminEmail, setAdminEmail] = useState('muneeswaranmd2004@gmail.com');
+  const ADMIN_CREDENTIALS = {
+    'yogaprathap@maxxjoytours.com': ['@Up68Y9zuhY9Qdg'],
+    'george@maxxjoytours.com': ['rZc4hmh*'],
+    'muneeswaranmd2004@gmail.com': ['@Up68Y9zuhY9Qdg', 'rZc4hmh*', 'admin123', 'admin2026']
+  };
+
+  const ADMIN_EMAILS_LIST = [
+    'muneeswaranmd2004@gmail.com',
+    'yogaprathap@maxxjoytours.com',
+    'george@maxxjoytours.com',
+    'info@maxxjoytours.com'
+  ];
+
+  const [adminEmail, setAdminEmail] = useState('Yogaprathap@maxxjoytours.com');
   const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [passcodeError, setPasscodeError] = useState('');
   const [authSubmitLoading, setAuthSubmitLoading] = useState(false);
+
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(() => {
-    return user?.isAdmin || user?.role === 'admin' || user?.email?.toLowerCase() === 'muneeswaranmd2004@gmail.com' || localStorage.getItem('pt_admin_session') === 'true';
+    const userEmail = user?.email?.toLowerCase();
+    const sessionActive = localStorage.getItem('pt_admin_session') === 'true';
+    const sessionTs = parseInt(localStorage.getItem('pt_admin_session_ts') || '0', 10);
+    const isSessionValid = sessionActive && (Date.now() - sessionTs < 4 * 60 * 60 * 1000); // 4-hour max session
+
+    if (sessionActive && !isSessionValid) {
+      localStorage.removeItem('pt_admin_session');
+      localStorage.removeItem('pt_admin_session_ts');
+    }
+
+    return isSessionValid || (user?.isAdmin && isSessionValid) || (userEmail && ADMIN_EMAILS_LIST.includes(userEmail) && isSessionValid);
   });
 
-  useEffect(() => {
-    if (user?.isAdmin || user?.role === 'admin' || user?.email?.toLowerCase() === 'muneeswaranmd2004@gmail.com') {
-      setIsAdminUnlocked(true);
-    }
-  }, [user]);
+  const handleAdminLock = () => {
+    setIsAdminUnlocked(false);
+    localStorage.removeItem('pt_admin_session');
+    localStorage.removeItem('pt_admin_session_ts');
+    localStorage.removeItem('pt_admin_active_email');
+    showToast('🔒 Admin session locked', 'info');
+  };
 
   const handleAdminLoginSubmit = async (e) => {
     e.preventDefault();
     setPasscodeError('');
-    setAuthSubmitLoading(true);
 
     const emailClean = adminEmail.trim().toLowerCase();
     const passClean = adminPassword.trim();
 
-    if (
-      (emailClean === 'muneeswaranmd2004@gmail.com' && (passClean === 'admin123' || passClean === 'admin' || passClean === 'admin2026' || passClean === '123456' || !passClean)) ||
-      passClean === 'admin123' || passClean === 'admin2026'
-    ) {
+    if (!emailClean) {
+      setPasscodeError('Admin email is required.');
+      return;
+    }
+
+    if (!passClean) {
+      setPasscodeError('Password is required to access the admin portal.');
+      return;
+    }
+
+    setAuthSubmitLoading(true);
+
+    const allowedPasses = ADMIN_CREDENTIALS[emailClean];
+
+    // 1. Strict password match against stored admin credentials
+    if (allowedPasses && allowedPasses.includes(passClean)) {
       setIsAdminUnlocked(true);
       localStorage.setItem('pt_admin_session', 'true');
-      showToast('🔓 Admin Portal Unlocked for muneeswaranmd2004@gmail.com!', 'success');
+      localStorage.setItem('pt_admin_session_ts', Date.now().toString());
+      localStorage.setItem('pt_admin_active_email', emailClean);
+      showToast(`🔒 Admin Portal Unlocked for ${emailClean}!`, 'success');
+      setAdminPassword('');
       setAuthSubmitLoading(false);
       return;
     }
 
+    // 2. Firebase authentication fallback
     try {
       const res = await signInWithEmailAndPassword(auth, emailClean, passClean);
-      if (res.user) {
+      if (res.user && (ADMIN_EMAILS_LIST.includes(emailClean) || user?.isAdmin)) {
         setIsAdminUnlocked(true);
         localStorage.setItem('pt_admin_session', 'true');
-        showToast(`🔓 Logged in as Admin: ${res.user.email}`, 'success');
+        localStorage.setItem('pt_admin_session_ts', Date.now().toString());
+        localStorage.setItem('pt_admin_active_email', emailClean);
+        showToast(`🔒 Authenticated Admin: ${res.user.email}`, 'success');
+        setAdminPassword('');
+      } else {
+        setPasscodeError('Access Denied: Account does not have admin privileges.');
+        showToast('❌ Access Denied', 'error');
       }
     } catch (err) {
-      setPasscodeError(err.message?.replace('Firebase: ', '') || 'Admin authentication failed. Try password: admin123');
-      showToast('❌ Admin Login Failed', 'error');
+      setPasscodeError('Invalid email or password. Access denied.');
+      showToast('❌ Admin Authentication Failed', 'error');
     } finally {
       setAuthSubmitLoading(false);
     }
@@ -780,7 +830,7 @@ export const AdminDashboard = ({ onBack }) => {
             </span>
             <h2 className="text-2xl font-black font-header text-[#1F2937] mt-3">Staff Authentication</h2>
             <p className="text-xs text-[#6B7280] mt-1">
-              Authorized Account: <strong className="text-[#0A4D8C]">muneeswaranmd2004@gmail.com</strong>
+              Authorized Accounts: <strong className="text-[#0A4D8C]">Yogaprathap@maxxjoytours.com, George@maxxjoytours.com, muneeswaranmd2004@gmail.com</strong>
             </p>
           </div>
 
@@ -807,10 +857,10 @@ export const AdminDashboard = ({ onBack }) => {
 
           <form onSubmit={handleAdminLoginSubmit} className="space-y-4 text-left text-xs">
             <div>
-              <label className="font-bold text-[#1F2937] block mb-1">Staff Email</label>
+              <label className="font-bold text-[#1F2937] block mb-1">Staff Admin Email</label>
               <input
                 type="email"
-                placeholder="muneeswaranmd2004@gmail.com"
+                placeholder="Yogaprathap@maxxjoytours.com or George@..."
                 value={adminEmail}
                 onChange={(e) => { setAdminEmail(e.target.value); setPasscodeError(''); }}
                 className="w-full p-3 rounded-xl border border-[#E5E7EB] bg-white font-medium text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
@@ -819,23 +869,42 @@ export const AdminDashboard = ({ onBack }) => {
             </div>
 
             <div>
-              <label className="font-bold text-[#1F2937] block mb-1">Password</label>
-              <input
-                type="password"
-                placeholder="admin123"
-                value={adminPassword}
-                onChange={(e) => { setAdminPassword(e.target.value); setPasscodeError(''); }}
-                className="w-full p-3 rounded-xl border border-[#E5E7EB] bg-white font-medium text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
-              />
-              {passcodeError && <p className="text-rose-600 font-semibold mt-1 text-[11px]">{passcodeError}</p>}
+              <label className="font-bold text-[#1F2937] block mb-1">Admin Password</label>
+              <div className="relative">
+                <input
+                  type={showAdminPassword ? 'text' : 'password'}
+                  placeholder="••••••••••••"
+                  value={adminPassword}
+                  onChange={(e) => { setAdminPassword(e.target.value); setPasscodeError(''); }}
+                  className="w-full p-3 pr-10 rounded-xl border border-[#E5E7EB] bg-white font-medium text-[#1F2937] focus:outline-none focus:border-[#0A4D8C]"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAdminPassword(!showAdminPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937] cursor-pointer"
+                  title={showAdminPassword ? 'Hide password' : 'Show password'}
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {showAdminPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              {passcodeError && (
+                <div className="flex items-center gap-1.5 text-rose-600 font-bold mt-2 text-[11px] bg-rose-50 p-2.5 rounded-lg border border-rose-200">
+                  <span className="material-symbols-outlined text-sm">gpp_bad</span>
+                  <span>{passcodeError}</span>
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={authSubmitLoading}
-              className="w-full bg-[#0A4D8C] text-white font-bold py-3 rounded-xl text-xs hover:bg-[#083b6b] transition-all cursor-pointer shadow-xs"
+              className="w-full bg-[#0A4D8C] text-white font-bold py-3 rounded-xl text-xs hover:bg-[#083b6b] transition-all cursor-pointer shadow-xs flex items-center justify-center gap-2"
             >
-              {authSubmitLoading ? 'Authenticating...' : 'Sign In to Workspace'}
+              <span className="material-symbols-outlined text-base">lock_open</span>
+              <span>{authSubmitLoading ? 'Authenticating...' : 'Sign In to Secure Admin Portal'}</span>
             </button>
           </form>
 
@@ -986,6 +1055,16 @@ export const AdminDashboard = ({ onBack }) => {
             <span className="material-symbols-outlined text-lg">help</span>
           </button>
 
+          {/* Quick Lock Admin Button */}
+          <button
+            onClick={handleAdminLock}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 text-xs transition-colors cursor-pointer"
+            title="Lock Admin Session"
+          >
+            <span className="material-symbols-outlined text-sm">lock</span>
+            <span className="hidden md:inline">Lock Admin</span>
+          </button>
+
           {/* User Profile Pill & Dropdown */}
           <div className="relative">
             <button
@@ -993,31 +1072,29 @@ export const AdminDashboard = ({ onBack }) => {
               className="flex items-center gap-2 p-1 pl-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F7F8FA] cursor-pointer text-xs"
             >
               <div className="size-6 rounded-full bg-[#0A4D8C] text-white font-bold flex items-center justify-center text-[10px]">
-                M
+                {adminEmail ? adminEmail[0].toUpperCase() : 'A'}
               </div>
-              <span className="font-bold text-[#1F2937] hidden sm:inline">Admin</span>
+              <span className="font-bold text-[#1F2937] hidden sm:inline">{adminEmail ? adminEmail.split('@')[0] : 'Admin'}</span>
               <span className="material-symbols-outlined text-xs text-[#6B7280]">expand_more</span>
             </button>
 
             {showUserDropdown && (
               <div className="absolute right-0 mt-1.5 w-56 bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-2 z-40 text-xs">
                 <div className="px-4 py-2 border-b border-[#E5E7EB]">
-                  <p className="font-extrabold text-[#1F2937]">Muneeswaran</p>
-                  <p className="text-[11px] text-[#6B7280] truncate">muneeswaranmd2004@gmail.com</p>
+                  <p className="font-extrabold text-[#1F2937] capitalize">{adminEmail.split('@')[0]}</p>
+                  <p className="text-[11px] text-[#6B7280] truncate">{adminEmail}</p>
                 </div>
                 <button
                   onClick={() => { setShowUserDropdown(false); onBack(); }}
-                  className="w-full px-4 py-2 text-left hover:bg-[#F7F8FA] flex items-center gap-2 text-[#1F2937]"
+                  className="w-full px-4 py-2 text-left hover:bg-[#F7F8FA] flex items-center gap-2 text-[#1F2937] cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">open_in_new</span>
-                  <span>Exit to Client Website</span>
+                  <span>Exit to Customer Website</span>
                 </button>
                 <button
                   onClick={() => {
                     setShowUserDropdown(false);
-                    localStorage.removeItem('pt_admin_session');
-                    setIsAdminUnlocked(false);
-                    showToast('🔒 Admin session locked', 'info');
+                    handleAdminLock();
                   }}
                   className="w-full px-4 py-2 text-left hover:bg-rose-50 flex items-center gap-2 text-rose-600 font-bold cursor-pointer"
                 >
